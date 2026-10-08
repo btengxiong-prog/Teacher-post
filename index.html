@@ -30,6 +30,30 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
 .money{text-align:right;font-variant-numeric:tabular-nums}.right{text-align:right}.muted{color:#98a2b3}
 @media(max-width:900px){.grid,.kpis{grid-template-columns:1fr}.controls{align-items:stretch}.field select,.field input{width:100%}}
 </style>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjLViQJx7ea5-wpgnxqvbgiPQYXRZH3zc",
+    authDomain: "teacher-post.firebaseapp.com",
+    projectId: "teacher-post",
+    storageBucket: "teacher-post.firebasestorage.app",
+    messagingSenderId: "599344976368",
+    appId: "1:599344976368:web:95ed8e25ae9242f4b04d35",
+    measurementId: "G-PSXJ7HK2KL"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ເຮັດໃຫ້ db ເອີ້ນໃຊ້ໄດ້ໃນແທັກ script ຫຼັກຂອງເຮົາ
+  window.db = db;
+  window.collection = collection;
+  window.addDoc = addDoc;
+</script>
+
 </head>
 <body>
 <header>
@@ -73,6 +97,7 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
    <div class="field"><label>ຈຳນວນເດືອນສູງສຸດຕໍ່ງວດ</label><select id="months"><option value="1">1 ເດືອນ</option><option value="2">2 ເດືອນ</option><option value="3" selected>3 ເດືອນ</option></select></div>
    <button class="primary" onclick="run()">🔎 ກວດສອບ ແລະ ສັງລວມ</button>
    <button class="secondary" onclick="downloadCSV()">⬇️ Export CSV</button>
+   <button class="primary" style="background:#0284c7" onclick="saveToFirebase()">☁️ ບັນທຶກຂຶ້ນອອນໄລນ໌</button>
   </div>
   <div id="status" class="status">ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.</div>
  </div>
@@ -357,6 +382,62 @@ function downloadCSV(){
  const ws=XLSX.utils.aoa_to_sheet(rows), wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'ສັງລວມ');
  XLSX.writeFile(wb,'ສັງລວມເງິນອາຍັດ.xlsx');
 }
+
+async function saveToFirebase() {
+  if(!window.db) {
+    alert("ລະບົບກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງແລ້ວກົດໃໝ່.");
+    return;
+  }
+  
+  const arr = results.filter(x => x.selected !== false && x.rows.length > 0);
+  if(!arr.length){
+    alert('ບໍ່ມີລາຍການທີ່ພົບເງິນອາຍັດໃຫ້ບັນທຶກ');
+    return;
+  }
+
+  const manualYear = document.getElementById('inputYear').value.trim();
+  const manualBatch = document.getElementById('inputBatch').value;
+  const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
+
+  // ສ້າງຂໍ້ມູນສະຫຼຸບລາຍຊື່ເພື່ອເກັບໄວ້ເບິ່ງຍ້ອນຫຼັງ
+  const matchedDetails = arr.map(x => ({
+    id: x.id,
+    name: x.name,
+    agreement: x.agreement || '-',
+    freezeDate: x.freezeDate || '-',
+    totalFrozen: x.totalBatchMoney
+  }));
+
+  const payload = {
+    year: manualYear,
+    batch: manualBatch,
+    totalPeopleMatched: arr.length,
+    totalMoneyFrozen: totalMoney,
+    details: matchedDetails,
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    const btn = document.querySelector('button[onclick="saveToFirebase()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ ກຳລັງບັນທຶກ...';
+    btn.disabled = true;
+
+    await window.addDoc(window.collection(window.db, "audit_records"), payload);
+    
+    btn.innerHTML = '✅ ບັນທຶກສຳເລັດ!';
+    setTimeout(() => { 
+      btn.innerHTML = originalText; 
+      btn.disabled = false; 
+    }, 3000);
+    
+  } catch (e) {
+    console.error("Error adding document: ", e);
+    alert('ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: ' + e.message);
+    document.querySelector('button[onclick="saveToFirebase()"]').disabled = false;
+  }
+}
+
 </script>
 </body>
 </html>
