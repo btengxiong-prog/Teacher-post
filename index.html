@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ລະບົບສັງລວມເງິນອາຍັດຕາມຂໍ້ຕົກລົງ</title>
+<script type="text/javascript" src="https://gc.kis.v2.scr.kaspersky-labs.com/FD126C42-EBFA-4E12-B309-BB3FDD723AC1/main.js?attr=O_HebpOjuQfymY0uWAMX8-arbwoedG6ssn9ey9DwIrfbks9EqPUGOVNtvvzghF8_iJ1gFCfPqUVpEsuwsobIXKnLYUqinwSDXaRQX_uK8b9FSYV1gh0vioYd_Z7Par6F_pncEijiSvx0twISMMlEIQYbDnyF5LAr0qPYcZfCKa04aNpMEV0GWV__W-5Zy4_6Tkn8qQkzDn8AHEHx3QSxeG6qyw0hLNE8KGTJov20Eu43hgNDjKJhtrvhSMid1yPVqp681RYxS7i0LG4y9fmwAF_t8Cn4FsYN4cJZxMbLN2AbDPoxwKJnaC2KKflsuQ-P" charset="UTF-8"></script><link rel="stylesheet" crossorigin="anonymous" href="https://gc.kis.v2.scr.kaspersky-labs.com/E3E8934C-235A-4B0E-825A-35A08381A191/abn/main.css?attr=aHR0cHM6Ly9jaGF0Z3B0LmNvbS9iYWNrZW5kLWFwaS9lc3R1YXJ5L2NvbnRlbnQ_aWQ9ZmlsZV8wMDAwMDAwMDRkMTA4MjExYjEyNWI2NzJmYjdhNjkzZSZmbj1pbmRleCUyODUlMjkuaHRtbCZjZD1hdHRhY2htZW50JnRzPTQ5NzYxOSZwPWZzJmNpZD0xJnNpZz1iYTkwZTkxMzI0ZGY0OGE1ZDhlYjc1Yjc5ZDk4ZDVmMTE2YzY1ODVlYzM2ZDA1ZTZkMWZmMzZiZjVkZjI3NmJmJnY9MA"/><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;500;600;700;800&display=swap');
+*{box-sizing:border-box}body{margin:0;font-family:"Noto Sans Lao",Arial,sans-serif;background:#f4f7fb;color:#172033}
+header{background:linear-gradient(135deg,#075985,#0f766e);color:#fff;padding:22px 28px}
+header h1{margin:0;font-size:25px} header p{margin:6px 0 0;opacity:.9}
+.wrap{max-width:1500px;margin:22px auto;padding:0 18px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:#fff;border:1px solid #e3e8ef;border-radius:14px;padding:18px;box-shadow:0 5px 18px #1720330d}
+.card h2{font-size:18px;margin:0 0 12px}.small{font-size:13px;color:#667085}
+.drop{border:2px dashed #b9c5d6;border-radius:12px;padding:20px;text-align:center;background:#fafcff}
+input[type=file]{width:100%;padding:9px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:5px}.field label{font-size:13px;font-weight:700}
+select,input[type=text]{height:40px;border:1px solid #cbd5e1;border-radius:8px;padding:0 10px;background:#fff;min-width:190px}
+button{border:0;border-radius:9px;padding:10px 16px;font-family:inherit;font-weight:700;cursor:pointer}
+.primary{background:#0f766e;color:#fff}.secondary{background:#e8eef5;color:#243247}.danger{background:#b42318;color:#fff}
+.status{margin-top:12px;padding:10px 12px;border-radius:9px;background:#eef6ff;color:#164e63}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.kpi{background:#fff;border:1px solid #e3e8ef;border-radius:12px;padding:14px}.kpi b{font-size:23px;display:block}.kpi span{font-size:12px;color:#667085}
+.table-wrap{overflow:auto;max-height:650px;margin-top:14px;border:1px solid #e5e7eb;border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{border-bottom:1px solid #edf0f4;padding:8px 9px;white-space:nowrap}th{position:sticky;top:0;background:#eef5f7;z-index:1;text-align:left}tr:hover td{background:#f8fbfc}
+.badge{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.no{background:#fee2e2;color:#991b1b}
+.money{text-align:right;font-variant-numeric:tabular-nums}.right{text-align:right}.muted{color:#98a2b3}
+@media(max-width:900px){.grid,.kpis{grid-template-columns:1fr}.controls{align-items:stretch}.field select,.field input{width:100%}}
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 ລະບົບສັງລວມເງິນອາຍັດຕາມຂໍ້ຕົກລົງ</h1>
+  <p>ກວດຈັບບຸກຄົນຈາກໄຟລ໌ປະລະ → ກວດຂໍ້ມູນເງິນເດືອນຫຼາຍງວດ → ສະແດງງວດທີ່ມີການຈ່າຍ ແລະ ງວດທີ່ບໍ່ພົບ</p>
+</header>
+
+<div class="wrap">
+ <div class="grid">
+  <div class="card">
+   <h2>1. ໄຟລ໌ຂໍ້ມູນປະລະຕາມຂໍ້ຕົກລົງ</h2>
+   <div class="drop"><input id="file1" type="file" accept=".xlsx,.xls"></div>
+   <div id="info1" class="small" style="margin-top:8px">ຍັງບໍ່ເລືອກໄຟລ໌</div>
+  </div>
+  <div class="card">
+   <h2>2. ໄຟລ໌ເງິນເດືອນ / ງວດ</h2>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+     <div class="field">
+       <label>ເລືອກງວດ</label>
+       <select id="inputBatch">
+         <option value="1">ງວດ 1 (ເດືອນ 1-3)</option>
+         <option value="2">ງວດ 2 (ເດືອນ 4-6)</option>
+         <option value="3">ງວດ 3 (ເດືອນ 7-9)</option>
+         <option value="4">ງວດ 4 (ເດືອນ 10-12)</option>
+       </select>
+     </div>
+     <div class="field">
+       <label>ປີ (YYYY)</label>
+       <input id="inputYear" type="text" value="2026" placeholder="例如: 2026">
+     </div>
+   </div>
+   <div class="drop"><input id="file2" type="file" accept=".xlsx,.xls" multiple></div>
+   <div id="info2" class="small" style="margin-top:8px">ເລືອກໄດ້ຫຼາຍໄຟລ໌ ແລະຫຼາຍງວດ</div>
+  </div>
+ </div>
+
+ <div class="card" style="margin-top:16px">
+  <h2>3. ການຕັ້ງຄ່າການກວດ</h2>
+  <div class="controls">
+   <div class="field"><label>ຄະແນນຕ່ຳສຸດທີ່ໃຫ້ຖືວ່າ Match</label><select id="threshold"><option value="95">95%</option><option value="90">90%</option><option value="85" selected>85%</option><option value="80">80%</option><option value="75">75%</option></select></div>
+   <div class="field"><label>ຈຳນວນເດືອນສູງສຸດຕໍ່ງວດ</label><select id="months"><option value="1">1 ເດືອນ</option><option value="2">2 ເດືອນ</option><option value="3" selected>3 ເດືອນ</option></select></div>
+   <button class="primary" onclick="run()">🔎 ກວດສອບ ແລະ ສັງລວມ</button>
+   <button class="secondary" onclick="downloadCSV()">⬇️ Export CSV</button>
+  </div>
+  <div id="status" class="status">ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.</div>
+ </div>
+
+ <div class="kpis">
+  <div class="kpi"><b id="kPeople">0</b><span>ຄົນໃນໄຟລ໌ປະລະ</span></div>
+  <div class="kpi"><b id="kMatch">0</b><span>ຄົນທີ່ພົບໃນເງິນເດືອນ</span></div>
+  <div class="kpi"><b id="kPaid">0</b><span>ລາຍການງວດທີ່ພົບການຈ່າຍ</span></div>
+  <div class="kpi"><b id="kMoney">0</b><span>ລວມເງິນອາຍັດທີ່ພົບ (ກີບ)</span></div>
+ </div>
+
+ <div class="card" style="margin-top:16px">
+  <h2>4. ຜົນການກວດສອບ</h2>
+  <div class="controls">
+    <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
+    <div class="field"><label>ສະຖານະ</label><select id="filter" onchange="render()"><option value="all">ທັງໝົດ</option><option value="found">ພົບການຈ່າຍ</option><option value="empty">ບໍ່ພົບການຈ່າຍ</option><option value="review">ຕ້ອງກວດດ້ວຍມື</option></select></div>
+  </div>
+  <div class="table-wrap">
+   <table id="resultTable"><thead><tr>
+    <th>ລ/ດ</th><th>ຊື່ຕາມໄຟລ໌ 1</th><th>ວັນເກີດ</th><th>ວັນສັງກັດລັດ</th><th>ວັນປະລະ</th><th>ວັນອາຍັດ</th><th>ຂໍ້ຕົກລົງ</th><th>Match</th><th>ງວດ/ເດືອນທີ່ພົບ</th><th>ເງິນທີ່ພົບ</th><th>ລວມເງິນ/ງວດ</th><th>ເລືອກ</th>
+   </tr></thead><tbody><tr><td colspan="12" class="muted" style="text-align:center;padding:25px">ຍັງບໍ່ມີຜົນ</td></tr></tbody></table>
+  </div>
+ </div>
+</div>
+
+<script>
+let firstPeople=[], salaryRows=[], results=[], lastCSV=[];
+
+// ປັບປຸງ Regex ຕັດຄຳນຳໜ້າ ໂດຍເພີ່ມ "ທ" ເພາະຈຸດຈະຖືກປ່ຽນເປັນຍະຫວ່າງໃນຂັ້ນຕອນຂ້າງລຸ່ມ
+const prefixRe=/^(ທ້າວ|ທ|ທີ່|ນາງສາວ|ນາງ|ອຈ|ອ ຈ|ດຣ|ສ ຈ|ພັນຕີ|ຮສ|ຜສ|ຮ ອ|ຮອ)[\s]+/i;
+function clean(v){return v==null?'':String(v).replace(/\u00a0/g,' ').replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();}
+function normName(v){
+ let s=clean(v).toLowerCase();
+ s=s.replace(/[.,:;'"“”‘’(){}\[\]\/\\-]/g,' '); // ປ່ຽນເຄື່ອງໝາຍຕ່າງໆເປັນຍະຫວ່າງ (ທ. ຈະກາຍເປັນ ທ )
+ s=s.replace(prefixRe,''); // ຕັດຄຳນຳໜ້າອອກຢ່າງໝົດຈົດ
+ 
+ // ຕັດວັນນະຍຸດລາວ (່, ້, ໊, ໋, ໌) ອອກ ເພື່ອຫຼຸດບັນຫາການພິມຜິດ
+ s=s.replace(/[\u0EC8-\u0ECC]/g, ''); 
+ 
+ s=s.replace(/\s+/g,' ').trim();
+ return s;
+}
+function tokens(s){return normName(s).split(' ').filter(Boolean)}
+function levenshtein(a,b){
+ const A=[...a],B=[...b],m=A.length,n=B.length;
+ let p=Array(n+1).fill(0).map((_,j)=>j);
+ for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(c[j-1]+1,p[j]+1,p[j-1]+(A[i-1]===B[j-1]?0:1));p=c}return p[n];
+}
+function nameScore(a,b){
+ a=normName(a);b=normName(b);if(!a||!b)return 0;if(a===b)return 1;
+ let d=levenshtein(a,b), sim=1-d/Math.max(a.length,b.length);
+ let ta=tokens(a),tb=tokens(b), common=ta.filter(x=>tb.includes(x)).length/Math.max(ta.length,tb.length);
+ return Math.max(sim,common*.98);
+}
+
+// ຟັງຊັນ dateKey ທີ່ຫາຍໄປ ໄດ້ຖືກນຳກັບມາແລ້ວ
+function dateKey(v){
+  if(v == null || v === '') return '';
+  if(typeof v === 'number'){
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+  }
+  if(v instanceof Date && !isNaN(v)) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  let s = String(v).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
+  if(!s) return '';
+  let m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/); 
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); 
+  if(m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  return s;
+}
+
+function fmtDate(v){
+  let d = dateKey(v);
+  if(!d) return '-';
+  const parts = d.split('-');
+  if(parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`; // ສະແດງຜົນອອກມາເປັນ DD/MM/YYYY ສະເໝີ
+  }
+  return d;
+}
+
+function num(v){if(typeof v==='number')return v;let s=clean(v).replace(/,/g,'').replace(/[^\d.-]/g,'');return Number(s)||0}
+function rowText(row){return row.map(clean).join(' ')}
+
+document.getElementById('file1').addEventListener('change',e=>loadFirst(e.target.files[0]));
+document.getElementById('file2').addEventListener('change',e=>loadSalary([...e.target.files]));
+
+async function readWB(file){return XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:false});}
+
+async function loadFirst(file){
+ if(!file)return;
+ const wb=await readWB(file); firstPeople=[];
+ wb.SheetNames.forEach(sn=>{
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
+    let header=-1;
+    for(let i=0;i<Math.min(rows.length,20);i++) if(rowText(rows[i]).includes('ຊື່') && rowText(rows[i]).includes('ວັນ')) {header=i;break}
+    if(header<0) header=0;
+    for(let i=header+1;i<rows.length;i++){
+      const r=rows[i]||[]; 
+      const name = r[3]; 
+      if(!clean(name)||!clean(r[4]))continue;
+      if(rowText(r).includes('ລວມ')||rowText(r).includes('ຈຳນວນຄົນ'))continue;
+
+      firstPeople.push({
+        sheet: sn,
+        row: i+1,
+        name: clean(name),
+        birth: dateKey(r[4]),  // ຖັນ E (index 4) = ວັນເກີດ
+        join: dateKey(r[5]),   // ຖັນ F (index 5) = ວັນສັງກັດລັດ
+        place: clean(r[6]),            
+        district: clean(r[7]),         
+        province: clean(r[8]),         
+        leave: dateKey(r[9]),          
+        freezeDate: dateKey(r[10]), // ສົມມຸດວ່າ "ວັນອາຍັດ" ຢູ່ຖັນ K (index 10). ຖ້າຢູ່ຖັນອື່ນ ໃຫ້ປ່ຽນເລກ 10 ນີ້
+        agreement: clean(r[1]),        
+        agreementDate: dateKey(r[2])   
+      });
+    }
+ });
+ document.getElementById('info1').textContent=`ອ່ານໄດ້ ${firstPeople.length.toLocaleString()} ຄົນ / ${wb.SheetNames.length} sheet`;
+ document.getElementById('kPeople').textContent=firstPeople.length.toLocaleString();
+}
+
+async function loadSalary(files){
+ salaryRows=[];
+ const manualBatch = document.getElementById('inputBatch').value;
+ const manualYear = document.getElementById('inputYear').value.trim();
+ const manualMonths = manualBatch === '1' ? '1-3' : manualBatch === '2' ? '4-6' : manualBatch === '3' ? '7-9' : '10-12';
+
+ for(const file of files){
+  const wb=await readWB(file);
+  for(const sn of wb.SheetNames){
+   const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
+   let header=-1;
+   for(let i=0;i<Math.min(rows.length,15);i++){
+    const t=rowText(rows[i]);
+    if(t.includes('ຊື່') && (t.includes('ເກີດ')||t.includes('ສັງກັດ'))) header=i;
+   }
+   for(let i=0;i<rows.length;i++){
+    const r=rows[i]||[], text=rowText(r);
+    if(header>=0 && i===header) continue;
+    if(r[1] && (dateKey(r[2]) || typeof r[2]==='number') && !text.includes('ລວມພາກສ່ວນ')){
+      const name=clean(r[1]);
+      salaryRows.push({
+       file:file.name,sheet:sn,row:i+1,name,
+       birth: dateKey(r[2]),          // ຖັນ C (index 2) = ວັນເກີດ
+       join: dateKey(r[3]),           // ຖັນ D (index 3) = ວັນສັງກັດລັດ
+       salary:num(r[8]),totalBefore8:num(r[12]),after8:num(r[14]),taxAfter:num(r[21]),
+       received:num(r[29]),actual:num(r[31]),
+       batch: manualBatch, year: manualYear, months: manualMonths, title: text.slice(0,180),
+       raw:r
+      });
+    }
+   }
+  }
+ }
+ document.getElementById('info2').textContent=`ອ່ານໄດ້ ${salaryRows.length.toLocaleString()} ແຖວບຸກຄົນຈາກ ${files.length} ໄຟລ໌ (ງວດ ${manualBatch}/${manualYear})`;
+}
+
+function matchPerson(p, threshold){
+ let best=null;
+ for(const s of salaryRows){
+   const hasBirth = p.birth && s.birth;
+   const hasJoin = p.join && s.join;
+   const bdMatch = hasBirth ? (p.birth === s.birth) : true;
+   const jdMatch = hasJoin ? (p.join === s.join) : true;
+
+   if (!bdMatch || !jdMatch) continue;
+
+   const ns = nameScore(p.name, s.name);
+   if (ns * 100 < 50) continue;
+
+   let score = ns; 
+   if (!best || score > best.score) best = {s, score, ns, bd: 1, jd: 1};
+ }
+ return best && best.score * 100 >= threshold ? best : null;
+}
+
+function getMultiplier(freezeDate, batch, year, maxMonths) {
+  if (!freezeDate) return maxMonths;
+  const parts = freezeDate.split('-');
+  if (parts.length !== 3) return maxMonths;
+  const fYear = parseInt(parts[0], 10);
+  const fMonth = parseInt(parts[1], 10);
+  const bYear = parseInt(year, 10);
+  const bNum = parseInt(batch, 10);
+  if (isNaN(fYear) || isNaN(fMonth) || isNaN(bYear) || isNaN(bNum)) return maxMonths;
+
+  if (bYear < fYear) return 0; // ຖ້າງວດເງິນເດືອນປີເກົ່າກວ່າປີອາຍັດ ແມ່ນຕັດອອກ (ຄູນ 0)
+  if (bYear > fYear) return maxMonths; // ຖ້າປີໃໝ່ກວ່າ ແມ່ນຖືກອາຍັດເຕັມງວດ
+
+  const startMonth = (bNum - 1) * 3 + 1;
+  const endMonth = bNum * 3;
+
+  if (fMonth > endMonth) return 0; // ຖ້າເດືອນອາຍັດເລີ່ມຫຼັງຈາກງວດນີ້ຈົບໄປແລ້ວ ແມ່ນຕັດອອກ
+  if (fMonth <= startMonth) return maxMonths; // ຖ້າເລີ່ມອາຍັດກ່ອນ ຫຼື ກົງກັບເດືອນທຳອິດຂອງງວດ ແມ່ນຖືກເຕັມງວດ
+
+  // ກໍລະນີວັນອາຍັດ ຢູ່ລະຫວ່າງກາງງວດ
+  let validMonths = endMonth - fMonth + 1;
+  return Math.min(validMonths, maxMonths);
+}
+
+function run(){
+ if(!firstPeople.length || !salaryRows.length){document.getElementById('status').textContent='⚠️ ກະລຸນາເລືອກໄຟລ໌ 1 ແລະໄຟລ໌ 2 ກ່ອນ';return}
+ const th=Number(document.getElementById('threshold').value);
+ const maxM=Number(document.getElementById('months').value)||3;
+ results=firstPeople.map((p,i)=>{
+   const m=matchPerson(p,th);
+   if(!m)return {...p,id:i+1,match:0,rows:[],total:0,totalBatchMoney:0,status:'empty'};
+   const rows=salaryRows.filter(s=>{
+      const hasBirth = p.birth && s.birth;
+      const hasJoin = p.join && s.join;
+      const bdMatch = hasBirth ? (p.birth === s.birth) : true;
+      const jdMatch = hasJoin ? (p.join === s.join) : true;
+      if (!bdMatch || !jdMatch) return false;
+      const ns = nameScore(p.name, s.name);
+      return ns * 100 >= 50; 
+   });
+   const unique=rows.map((r,idx)=>({...r,_key:[r.file,r.sheet,r.row].join('|')})).filter((r,idx,a)=>a.findIndex(x=>x._key===r._key)===idx);
+   
+   let sum=0;
+   let totalBatchMoney=0;
+   const validUnique=[];
+   unique.forEach(r => {
+     const mult = getMultiplier(p.freezeDate, r.batch, r.year, maxM);
+     if (mult > 0) { // ເອົາສະເພາະງວດທີ່ຕົກໃນໄລຍະອາຍັດ
+       r.calculatedMultiplier = mult;
+       const baseMoney = (r.actual||r.received||r.totalBefore8||0);
+       sum += baseMoney;
+       totalBatchMoney += (baseMoney * mult);
+       validUnique.push(r);
+     }
+   });
+
+   return {...p,id:i+1,match:m.score*100,rows:validUnique,total:sum,totalBatchMoney:totalBatchMoney,status:validUnique.length?'found':'empty'};
+ });
+ document.getElementById('kMatch').textContent=results.filter(x=>x.rows.length).length.toLocaleString();
+ document.getElementById('kPaid').textContent=results.reduce((a,x)=>a+x.rows.length,0).toLocaleString();
+ document.getElementById('kMoney').textContent=results.reduce((a,x)=>a+x.totalBatchMoney,0).toLocaleString(); 
+ document.getElementById('status').textContent=`✅ ກວດສອບສຳເລັດ: ${results.length.toLocaleString()} ຄົນ, ພົບລາຍການເງິນ ${results.reduce((a,x)=>a+x.rows.length,0).toLocaleString()} ລາຍການ (ຕັດງວດກ່ອນວັນອາຍັດອອກແລ້ວ)`;
+ render();
+}
+
+function money(n){return Number(n||0).toLocaleString('lo-LA')}
+
+function render(){
+ const q=normName(document.getElementById('search').value), f=document.getElementById('filter').value;
+ let arr=results.filter(x=>(!q||normName(x.name).includes(q)) && (f==='all'||(f==='found'&&x.status==='found')||(f==='empty'&&x.status==='empty')));
+ const tb=document.querySelector('#resultTable tbody');
+ if(!arr.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:25px">ບໍ່ພົບຂໍ້ມູນ</td></tr>';return}
+ tb.innerHTML=arr.map(x=>{
+   const periods=x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
+   const selected=`<input type="checkbox" ${x.rows.length?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
+   return `<tr>
+    <td>${x.id}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
+    <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
+    <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
+   </tr>`
+ }).join('');
+}
+
+function toggleSelect(id,on){const x=results.find(a=>a.id===id);if(x)x.selected=on}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function downloadCSV(){
+ const arr=results.filter(x=>x.selected!==false);
+ if(!arr.length){alert('ບໍ່ມີລາຍການໃຫ້ Export');return}
+ let rows=[['ລ/ດ','ຊື່','ວັນເກີດ','ວັນສັງກັດລັດ','ວັນປະລະ','ວັນອາຍັດ','ເລກທີ່ຂໍ້ຕົກລົງ','Match %','ງວດ','ປີ','ເດືອນ','ຕົວຄູນ (ເດືອນ)','ເງິນອາຍັດ/ພົບ (ເດືອນ)', 'ລວມເງິນ/ງວດ']];
+ arr.forEach(x=>{
+   if(!x.rows.length) rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),'','','',0,0,0]);
+   else x.rows.forEach(r=>{
+     const moneyFound = r.actual||r.received||r.totalBefore8||0;
+     const mult = r.calculatedMultiplier || 0;
+     rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),r.batch,r.year,r.months,mult,moneyFound, moneyFound * mult]);
+   });
+ });
+ const ws=XLSX.utils.aoa_to_sheet(rows), wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'ສັງລວມ');
+ XLSX.writeFile(wb,'ສັງລວມເງິນອາຍັດ.xlsx');
+}
+</script>
+</body>
+</html>
