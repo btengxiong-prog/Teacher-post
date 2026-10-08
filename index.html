@@ -450,6 +450,7 @@ async function saveToFirebase() {
   }
 }
 let allHistories = []; // ຕົວແປສຳລັບເກັບປະຫວັດທັງໝົດທີ່ໂຫຼດມາ
+let allHistories = []; // ຕົວແປສຳລັບເກັບປະຫວັດທັງໝົດ
 
 // ຟັງຊັນ 1: ໂຫຼດລາຍຊື່ປະຫວັດທັງໝົດມາໃສ່ Dropdown
 async function fetchHistoryList() {
@@ -458,7 +459,6 @@ async function fetchHistoryList() {
     const btn = document.querySelector('button[onclick="fetchHistoryList()"]');
     btn.innerHTML = '⏳ ກຳລັງໂຫຼດ...';
     
-    // ເອົາ window.limit(1) ອອກ ເພື່ອດຶງຂໍ້ມູນທັງໝົດທີ່ເຄີຍບັນທຶກ
     const q = window.query(window.collection(window.db, "audit_records"), window.orderBy("timestamp", "desc"));
     const snap = await window.getDocs(q);
     
@@ -467,11 +467,13 @@ async function fetchHistoryList() {
       return alert("ຍັງບໍ່ມີປະຫວັດຂໍ້ມູນໃນລະບົບອອນໄລນ໌");
     }
     
-    allHistories = []; // ລ້າງຂໍ້ມູນເກົ່າ
+    allHistories = []; 
     const select = document.getElementById('historySelect');
-    select.innerHTML = '<option value="">-- ເລືອກປະຫວັດທີ່ຕ້ອງການ --</option>';
     
-    // ວົນລູບເອົາລາຍຊື່ແຕ່ລະອັນເຂົ້າໄປໃນ Dropdown
+    // ເພີ່ມຕົວເລືອກ "ສະແດງທັງໝົດທຸກງວດ" ໄວ້ເປັນອັນດັບທຳອິດ
+    select.innerHTML = '<option value="">-- ເລືອກປະຫວັດທີ່ຕ້ອງການ --</option>';
+    select.innerHTML += '<option value="all" style="font-weight:bold; color:#0f766e;">-- 🌟 ສະແດງທັງໝົດທຸກງວດ --</option>';
+    
     snap.forEach(doc => {
       const data = doc.data();
       data.id = doc.id;
@@ -487,7 +489,7 @@ async function fetchHistoryList() {
     });
     
     btn.innerHTML = '✅ ໂຫຼດສຳເລັດ';
-    setTimeout(() => btn.innerHTML = '🔄 ໂຫຼດໃໝ່', 3000);
+    setTimeout(() => btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່', 3000);
     
   } catch (e) {
     console.error(e);
@@ -496,12 +498,66 @@ async function fetchHistoryList() {
   }
 }
 
-// ຟັງຊັນ 2: ດຶງເອົາລາຍລະອຽດຂອງປະຫວັດທີ່ເລືອກໃນ Dropdown ມາສະແດງ
+// ຟັງຊັນ 2: ດຶງເອົາລາຍລະອຽດມາສະແດງ
 function loadSelectedHistory() {
   const selectedId = document.getElementById('historySelect').value;
   if(!selectedId) return alert("ກະລຸນາເລືອກປະຫວັດຈາກຊ່ອງເລືອກກ່ອນ");
   
-  // ຄົ້ນຫາຂໍ້ມູນຈາກຕົວແປທີ່ໂຫຼດມາເກັບໄວ້ແລ້ວ
+  // 🌟 ກໍລະນີຜູ້ໃຊ້ເລືອກ "ສະແດງທັງໝົດທຸກງວດ"
+  if(selectedId === 'all') {
+    let combinedMap = new Map();
+    let grandTotalMoney = 0;
+
+    // ວົນລູບເອົາຂໍ້ມູນທຸກໆງວດມາລວມກັນ
+    allHistories.forEach(history => {
+      history.details.forEach(d => {
+        let key = normName(d.name); // ໃຊ້ຟັງຊັນ normName ທີ່ມີຢູ່ແລ້ວ ເພື່ອລວມຄົນດຽວກັນທີ່ອາດຈະຢູ່ຫຼາຍງວດເຂົ້າກັນ
+        if(!combinedMap.has(key)) {
+          combinedMap.set(key, {
+            name: d.name,
+            freezeDate: d.freezeDate,
+            agreement: d.agreement,
+            totalBatchMoney: 0,
+            rows: []
+          });
+        }
+        let person = combinedMap.get(key);
+        person.totalBatchMoney += d.totalFrozen; // ບວກເງິນອາຍັດລວມຂອງຄົນນັ້ນ
+        person.rows.push({
+          batch: history.batch,
+          year: history.year,
+          months: '',
+          calculatedMultiplier: 'ລວມ' // ຂຽນວ່າ "ລວມ" ໃຫ້ສະແດງໃນຕາຕະລາງ
+        });
+        grandTotalMoney += d.totalFrozen; // ບວກເງິນລວມທັງໝົດຂອງລະບົບ
+      });
+    });
+
+    // ແປງຂໍ້ມູນທີ່ລວມແລ້ວໃສ່ເຂົ້າໃນຕາຕະລາງ results
+    results = Array.from(combinedMap.values()).map((p, i) => ({
+      id: i + 1,
+      name: p.name,
+      birth: '-', join: '-', leave: '-',
+      freezeDate: p.freezeDate,
+      agreement: p.agreement,
+      match: 100,
+      rows: p.rows,
+      total: p.totalBatchMoney,
+      totalBatchMoney: p.totalBatchMoney,
+      status: 'found',
+      selected: true
+    }));
+
+    document.getElementById('kPeople').textContent = '-';
+    document.getElementById('kMatch').textContent = results.length.toLocaleString();
+    document.getElementById('kMoney').textContent = grandTotalMoney.toLocaleString();
+    document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ທັງໝົດທຸກງວດ (ລວມພົບ ${results.length} ຄົນ)`;
+    
+    render();
+    return; // ຈົບການເຮັດວຽກສຳລັບກໍລະນີ "all"
+  }
+
+  // 📄 ກໍລະນີເລືອກເບິ່ງລາຍງວດປົກກະຕິ (ໂຄດເດີມ)
   const data = allHistories.find(x => x.id === selectedId);
   if(!data) return;
 
