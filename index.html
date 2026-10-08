@@ -118,7 +118,14 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
   <div class="controls">
    <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
    <div class="field"><label>ສະຖານະ</label><select id="filter" onchange="render()"><option value="all">ທັງໝົດ</option><option value="found">ພົບການຈ່າຍ</option><option value="empty">ບໍ່ພົບການຈ່າຍ</option><option value="review">ຕ້ອງກວດດ້ວຍມື</option></select></div>
-   <button class="secondary" style="margin-bottom: 2px;" onclick="loadLatestFirebaseData()">🔄 ດຶງປະຫວັດອອນໄລນ໌</button>
+   <div class="field">
+     <label>ເລືອກປະຫວັດອອນໄລນ໌</label>
+     <select id="historySelect">
+       <option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>
+     </select>
+   </div>
+   <button class="secondary" style="margin-bottom: 2px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
+   <button class="primary" style="margin-bottom: 2px;" onclick="loadSelectedHistory()">👁️ ເບິ່ງຂໍ້ມູນ</button>
  </div>
   <div class="table-wrap">
    <table id="resultTable"><thead><tr>
@@ -442,58 +449,87 @@ async function saveToFirebase() {
     document.querySelector('button[onclick="saveToFirebase()"]').disabled = false;
   }
 }
-async function loadLatestFirebaseData() {
+let allHistories = []; // ຕົວແປສຳລັບເກັບປະຫວັດທັງໝົດທີ່ໂຫຼດມາ
+
+// ຟັງຊັນ 1: ໂຫຼດລາຍຊື່ປະຫວັດທັງໝົດມາໃສ່ Dropdown
+async function fetchHistoryList() {
   if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າ...");
-  
   try {
-    const btn = document.querySelector('button[onclick="loadLatestFirebaseData()"]');
-    btn.innerHTML = '⏳ ກຳລັງດຶງຂໍ້ມູນ...';
+    const btn = document.querySelector('button[onclick="fetchHistoryList()"]');
+    btn.innerHTML = '⏳ ກຳລັງໂຫຼດ...';
     
-    // ດຶງຂໍ້ມູນຫຼ້າສຸດ 1 ໂຕທີ່ເຄີຍບັນທຶກໄວ້
-    const q = window.query(window.collection(window.db, "audit_records"), window.orderBy("timestamp", "desc"), window.limit(1));
+    // ເອົາ window.limit(1) ອອກ ເພື່ອດຶງຂໍ້ມູນທັງໝົດທີ່ເຄີຍບັນທຶກ
+    const q = window.query(window.collection(window.db, "audit_records"), window.orderBy("timestamp", "desc"));
     const snap = await window.getDocs(q);
     
     if(snap.empty) {
-      btn.innerHTML = '🔄 ດຶງປະຫວັດອອນໄລນ໌';
+      btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່';
       return alert("ຍັງບໍ່ມີປະຫວັດຂໍ້ມູນໃນລະບົບອອນໄລນ໌");
     }
     
-    const data = snap.docs[0].data();
+    allHistories = []; // ລ້າງຂໍ້ມູນເກົ່າ
+    const select = document.getElementById('historySelect');
+    select.innerHTML = '<option value="">-- ເລືອກປະຫວັດທີ່ຕ້ອງການ --</option>';
     
-    // ແປງຂໍ້ມູນຈາກ Firebase ກັບມາໃສ່ຕົວແປ results ເພື່ອໃຫ້ຕາຕະລາງສະແດງຜົນໄດ້
-    results = data.details.map((d, i) => ({
-      id: i + 1,
-      name: d.name,
-      birth: '-', join: '-', leave: '-', // ຂໍ້ມູນທີ່ບໍ່ໄດ້ບັນທຶກຂຶ້ນຖານຂໍ້ມູນຈະວາງເປົ່າໄວ້
-      freezeDate: d.freezeDate,
-      agreement: d.agreement,
-      match: 100, // ໃຫ້ຄະແນນເປັນ 100 ເພາະເປັນຂໍ້ມູນທີ່ຜ່ານການຈັບຄູ່ມາແລ້ວ
-      rows: [{
-        batch: data.batch,
-        year: data.year,
-        months: '',
-        calculatedMultiplier: 1 // ຕົວຄູນສຳເລັດຮູບ
-      }],
-      total: d.totalFrozen,
-      totalBatchMoney: d.totalFrozen,
-      status: 'found',
-      selected: true
-    }));
+    // ວົນລູບເອົາລາຍຊື່ແຕ່ລະອັນເຂົ້າໄປໃນ Dropdown
+    snap.forEach(doc => {
+      const data = doc.data();
+      data.id = doc.id;
+      allHistories.push(data);
+      
+      const d = new Date(data.timestamp);
+      const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
+      
+      const option = document.createElement('option');
+      option.value = doc.id;
+      option.textContent = `ປີ ${data.year} ງວດ ${data.batch} (ບັນທຶກວັນທີ ${dateStr})`;
+      select.appendChild(option);
+    });
     
-    // ອັບເດດຕົວເລກສະຖິຕິດ້ານເທິງ
-    document.getElementById('kPeople').textContent = '-';
-    document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
-    document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
-    document.getElementById('status').textContent = `🔄 ດຶງຂໍ້ມູນປະຫວັດຂອງ ປີ ${data.year} ງວດ ${data.batch} ສຳເລັດ!`;
-    
-    btn.innerHTML = '🔄 ດຶງປະຫວັດອອນໄລນ໌';
-    render(); // ສັ່ງໃຫ້ແຕ້ມຕາຕະລາງໃໝ່
+    btn.innerHTML = '✅ ໂຫຼດສຳເລັດ';
+    setTimeout(() => btn.innerHTML = '🔄 ໂຫຼດໃໝ່', 3000);
     
   } catch (e) {
     console.error(e);
-    alert("ເກີດຂໍ້ຜິດພາດໃນການດຶງຂໍ້ມູນ: " + e.message);
-    document.querySelector('button[onclick="loadLatestFirebaseData()"]').innerHTML = '🔄 ດຶງປະຫວັດອອນໄລນ໌';
+    alert("ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    document.querySelector('button[onclick="fetchHistoryList()"]').innerHTML = '🔄 ໂຫຼດລາຍຊື່';
   }
+}
+
+// ຟັງຊັນ 2: ດຶງເອົາລາຍລະອຽດຂອງປະຫວັດທີ່ເລືອກໃນ Dropdown ມາສະແດງ
+function loadSelectedHistory() {
+  const selectedId = document.getElementById('historySelect').value;
+  if(!selectedId) return alert("ກະລຸນາເລືອກປະຫວັດຈາກຊ່ອງເລືອກກ່ອນ");
+  
+  // ຄົ້ນຫາຂໍ້ມູນຈາກຕົວແປທີ່ໂຫຼດມາເກັບໄວ້ແລ້ວ
+  const data = allHistories.find(x => x.id === selectedId);
+  if(!data) return;
+
+  results = data.details.map((d, i) => ({
+    id: i + 1,
+    name: d.name,
+    birth: '-', join: '-', leave: '-',
+    freezeDate: d.freezeDate,
+    agreement: d.agreement,
+    match: 100,
+    rows: [{
+      batch: data.batch,
+      year: data.year,
+      months: '',
+      calculatedMultiplier: 1
+    }],
+    total: d.totalFrozen,
+    totalBatchMoney: d.totalFrozen,
+    status: 'found',
+    selected: true
+  }));
+  
+  document.getElementById('kPeople').textContent = '-';
+  document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
+  document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
+  document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດຂອງ ປີ ${data.year} ງວດ ${data.batch}`;
+  
+  render();
 }
 </script>
 </body>
