@@ -96,13 +96,14 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
 
  <div class="card" style="margin-top:16px">
   <h2>3. ການຕັ້ງຄ່າການກວດ</h2>
-  <div class="controls">
+<div class="controls">
    <div class="field"><label>ຄະແນນຕ່ຳສຸດທີ່ໃຫ້ຖືວ່າ Match</label><select id="threshold"><option value="95">95%</option><option value="90">90%</option><option value="85" selected>85%</option><option value="80">80%</option><option value="75">75%</option></select></div>
    <div class="field"><label>ຈຳນວນເດືອນສູງສຸດຕໍ່ງວດ</label><select id="months"><option value="1">1 ເດືອນ</option><option value="2">2 ເດືອນ</option><option value="3" selected>3 ເດືອນ</option></select></div>
+   <div class="field"><label>ຊື່ການກວດສອບ</label><input id="auditTitle" type="text" placeholder="ເຊັ່ນ: ປະຈຳປີ 2026..." style="min-width: 170px;"></div>
    <button class="primary" onclick="run()">🔎 ກວດສອບ ແລະ ສັງລວມ</button>
    <button class="secondary" onclick="downloadCSV()">⬇️ Export CSV</button>
    <button class="primary" style="background:#0284c7" onclick="saveToFirebase()">☁️ ບັນທຶກຂຶ້ນອອນໄລນ໌</button>
-  </div>
+ </div>
   <div id="status" class="status">ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.</div>
  </div>
 
@@ -409,9 +410,9 @@ async function saveToFirebase() {
 
   const manualYear = document.getElementById('inputYear').value.trim();
   const manualBatch = document.getElementById('inputBatch').value;
+  const auditTitle = document.getElementById('auditTitle').value.trim() || `ປະຈຳປີ ${manualYear}`; // ເອົາຊື່ການກວດສອບ (ຖ້າບໍ່ພິມ ຈະເອົາປີເງິນເດືອນມາເປັນຄ່າເລີ່ມຕົ້ນ)
   const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
-  // ສ້າງຂໍ້ມູນສະຫຼຸບລາຍຊື່ເພື່ອເກັບໄວ້ເບິ່ງຍ້ອນຫຼັງ
   const matchedDetails = arr.map(x => ({
     id: x.id,
     name: x.name,
@@ -421,6 +422,7 @@ async function saveToFirebase() {
   }));
 
   const payload = {
+    auditTitle: auditTitle, // ເພີ່ມຟິວຊື່ການກວດສອບເຂົ້າຖານຂໍ້ມູນ
     year: manualYear,
     batch: manualBatch,
     totalPeopleMatched: arr.length,
@@ -482,9 +484,11 @@ async function fetchHistoryList() {
       const d = new Date(data.timestamp);
       const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
       
+      const titleDisplay = data.auditTitle || `ປີ ${data.year}`; // ດຶງເອົາຊື່ການກວດສອບມາສະແດງ
+      
       const option = document.createElement('option');
       option.value = doc.id;
-      option.textContent = `ປີ ${data.year} ງວດ ${data.batch} (ບັນທຶກວັນທີ ${dateStr})`;
+      option.textContent = `[${titleDisplay}] ງວດ ${data.batch} (ບັນທຶກ ${dateStr})`;
       select.appendChild(option);
     });
     
