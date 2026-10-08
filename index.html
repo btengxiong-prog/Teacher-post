@@ -33,7 +33,7 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyBjLViQJx7ea5-wpgnxqvbgiPQYXRZH3zc",
@@ -52,6 +52,10 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
   window.db = db;
   window.collection = collection;
   window.addDoc = addDoc;
+  window.getDocs = getDocs;
+  window.query = query;
+  window.orderBy = orderBy;
+  window.limit = limit;
 </script>
 
 </head>
@@ -112,9 +116,10 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
  <div class="card" style="margin-top:16px">
   <h2>4. ຜົນການກວດສອບ</h2>
   <div class="controls">
-    <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
-    <div class="field"><label>ສະຖານະ</label><select id="filter" onchange="render()"><option value="all">ທັງໝົດ</option><option value="found">ພົບການຈ່າຍ</option><option value="empty">ບໍ່ພົບການຈ່າຍ</option><option value="review">ຕ້ອງກວດດ້ວຍມື</option></select></div>
-  </div>
+   <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
+   <div class="field"><label>ສະຖານະ</label><select id="filter" onchange="render()"><option value="all">ທັງໝົດ</option><option value="found">ພົບການຈ່າຍ</option><option value="empty">ບໍ່ພົບການຈ່າຍ</option><option value="review">ຕ້ອງກວດດ້ວຍມື</option></select></div>
+   <button class="secondary" style="margin-bottom: 2px;" onclick="loadLatestFirebaseData()">🔄 ດຶງປະຫວັດອອນໄລນ໌</button>
+ </div>
   <div class="table-wrap">
    <table id="resultTable"><thead><tr>
     <th>ລ/ດ</th><th>ຊື່ຕາມໄຟລ໌ 1</th><th>ວັນເກີດ</th><th>ວັນສັງກັດລັດ</th><th>ວັນປະລະ</th><th>ວັນອາຍັດ</th><th>ຂໍ້ຕົກລົງ</th><th>Match</th><th>ງວດ/ເດືອນທີ່ພົບ</th><th>ເງິນທີ່ພົບ</th><th>ລວມເງິນ/ງວດ</th><th>ເລືອກ</th>
@@ -437,7 +442,59 @@ async function saveToFirebase() {
     document.querySelector('button[onclick="saveToFirebase()"]').disabled = false;
   }
 }
-
+async function loadLatestFirebaseData() {
+  if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າ...");
+  
+  try {
+    const btn = document.querySelector('button[onclick="loadLatestFirebaseData()"]');
+    btn.innerHTML = '⏳ ກຳລັງດຶງຂໍ້ມູນ...';
+    
+    // ດຶງຂໍ້ມູນຫຼ້າສຸດ 1 ໂຕທີ່ເຄີຍບັນທຶກໄວ້
+    const q = window.query(window.collection(window.db, "audit_records"), window.orderBy("timestamp", "desc"), window.limit(1));
+    const snap = await window.getDocs(q);
+    
+    if(snap.empty) {
+      btn.innerHTML = '🔄 ດຶງປະຫວັດອອນໄລນ໌';
+      return alert("ຍັງບໍ່ມີປະຫວັດຂໍ້ມູນໃນລະບົບອອນໄລນ໌");
+    }
+    
+    const data = snap.docs[0].data();
+    
+    // ແປງຂໍ້ມູນຈາກ Firebase ກັບມາໃສ່ຕົວແປ results ເພື່ອໃຫ້ຕາຕະລາງສະແດງຜົນໄດ້
+    results = data.details.map((d, i) => ({
+      id: i + 1,
+      name: d.name,
+      birth: '-', join: '-', leave: '-', // ຂໍ້ມູນທີ່ບໍ່ໄດ້ບັນທຶກຂຶ້ນຖານຂໍ້ມູນຈະວາງເປົ່າໄວ້
+      freezeDate: d.freezeDate,
+      agreement: d.agreement,
+      match: 100, // ໃຫ້ຄະແນນເປັນ 100 ເພາະເປັນຂໍ້ມູນທີ່ຜ່ານການຈັບຄູ່ມາແລ້ວ
+      rows: [{
+        batch: data.batch,
+        year: data.year,
+        months: '',
+        calculatedMultiplier: 1 // ຕົວຄູນສຳເລັດຮູບ
+      }],
+      total: d.totalFrozen,
+      totalBatchMoney: d.totalFrozen,
+      status: 'found',
+      selected: true
+    }));
+    
+    // ອັບເດດຕົວເລກສະຖິຕິດ້ານເທິງ
+    document.getElementById('kPeople').textContent = '-';
+    document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
+    document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
+    document.getElementById('status').textContent = `🔄 ດຶງຂໍ້ມູນປະຫວັດຂອງ ປີ ${data.year} ງວດ ${data.batch} ສຳເລັດ!`;
+    
+    btn.innerHTML = '🔄 ດຶງປະຫວັດອອນໄລນ໌';
+    render(); // ສັ່ງໃຫ້ແຕ້ມຕາຕະລາງໃໝ່
+    
+  } catch (e) {
+    console.error(e);
+    alert("ເກີດຂໍ້ຜິດພາດໃນການດຶງຂໍ້ມູນ: " + e.message);
+    document.querySelector('button[onclick="loadLatestFirebaseData()"]').innerHTML = '🔄 ດຶງປະຫວັດອອນໄລນ໌';
+  }
+}
 </script>
 </body>
 </html>
