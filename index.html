@@ -228,7 +228,7 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
           </div>
           <button class="secondary" style="margin-bottom: 2px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
           <button class="primary" style="margin-bottom: 2px;" onclick="loadSelectedHistory()">👁️ ເບິ່ງຂໍ້ມູນ</button>
-          <button class="danger" style="margin-bottom: 2px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດທັງໝົດ</button>
+          <button class="danger" style="margin-bottom: 2px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດ</button>
         </div>
         <div class="table-wrap">
           <table id="resultTable"><thead><tr>
@@ -244,14 +244,19 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
  <div id="deleteModal" class="modal-overlay">
   <div class="modal-box">
    <div class="modal-icon">⚠️</div>
-   <div class="modal-title">ຢືນຢັນການລຶບປະຫວັດ</div>
-   <div class="modal-text">
-    ທ່ານຕ້ອງການລຶບຂໍ້ມູນປະຫວັດການກວດສອບ <b>"ທັງໝົດ"</b> ອອກຈາກລະບົບອອນໄລນ໌ແທ້ຫຼືບໍ່?<br><br>
-    <span style="color:#b42318;font-weight:600">(ໝາຍເຫດ: ຂໍ້ມູນທີ່ລຶບແລ້ວຈະບໍ່ສາມາດກູ້ຄືນໄດ້)</span>
+   <div class="modal-title">ຕົວເລືອກການລຶບປະຫວັດ</div>
+   <div class="modal-text" style="text-align: left; font-size: 14px; color: #172033;">
+     ກະລຸນາເລືອກຮູບແບບການລຶບທີ່ທ່ານຕ້ອງການ:<br><br>
+     <div style="display: flex; flex-direction: column; gap: 10px;">
+       <label id="labelDelSingle" style="display:flex; gap:8px; cursor:pointer;"><input type="radio" name="delScope" value="single" id="delSingle"> <span>ລຶບສະເພາະລາຍການ (ງວດ) ທີ່ກຳລັງເລືອກຢູ່</span></label>
+       <label id="labelDelActivity" style="display:flex; gap:8px; cursor:pointer;"><input type="radio" name="delScope" value="activity" id="delActivity"> <span>ລຶບກິດຈະກຳ/ຊື່ການກວດສອບ ທີ່ເລືອກນີ້ທັງໝົດ</span></label>
+       <label style="display:flex; gap:8px; cursor:pointer;"><input type="radio" name="delScope" value="all" id="delAll"> <span>ລຶບປະຫວັດ <b>"ທັງໝົດ"</b> ອອກຈາກລະບົບອອນໄລນ໌</span></label>
+     </div>
+    <br><span style="color:#b42318;font-weight:600; text-align:center; display:block;">(ໝາຍເຫດ: ຂໍ້ມູນທີ່ລຶບແລ້ວຈະບໍ່ສາມາດກູ້ຄືນໄດ້)</span>
    </div>
    <div class="modal-actions">
     <button class="secondary" onclick="closeModal()">ຍົກເລີກ</button>
-    <button class="danger" onclick="confirmDelete()">ລຶບທັງໝົດ</button>
+    <button class="danger" onclick="confirmDelete()">ຢືນຢັນການລຶບ</button>
    </div>
   </div>
  </div>
@@ -976,6 +981,33 @@ function loadSelectedHistory() {
 
 function deleteAllHistory() {
   if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງ...");
+  
+  const title = document.getElementById('auditTitleSelect').value;
+  const selectedId = document.getElementById('historySelect').value;
+  
+  const delSingle = document.getElementById('delSingle');
+  const delActivity = document.getElementById('delActivity');
+  const labelDelSingle = document.getElementById('labelDelSingle');
+  const labelDelActivity = document.getElementById('labelDelActivity');
+  const delAll = document.getElementById('delAll');
+
+  // ຈັດການຕົວເລືອກ ຖ້າມີການເລືອກງວດ ໃຫ້ເປີດປຸ່ມລຶບລາຍການ
+  if(title && selectedId && selectedId !== 'all') {
+    delSingle.disabled = false; labelDelSingle.style.opacity = '1';
+    delSingle.checked = true; // Default ເລືອກຂໍ້ນີ້
+  } else {
+    delSingle.disabled = true; labelDelSingle.style.opacity = '0.4';
+  }
+
+  // ຖ້າມີການເລືອກຊື່ການກວດສອບ ໃຫ້ເປີດປຸ່ມລຶບກິດຈະກຳ
+  if(title) {
+    delActivity.disabled = false; labelDelActivity.style.opacity = '1';
+    if(selectedId === 'all') delActivity.checked = true;
+  } else {
+    delActivity.disabled = true; labelDelActivity.style.opacity = '0.4';
+    delAll.checked = true;
+  }
+
   document.getElementById('deleteModal').classList.add('active');
 }
 
@@ -984,50 +1016,60 @@ function closeModal() {
 }
 
 async function confirmDelete() {
-  closeModal(); // ປິດ Popup ລົງ
+  closeModal(); 
+  
+  const scopeInput = document.querySelector('input[name="delScope"]:checked');
+  if(!scopeInput) return alert("ກະລຸນາເລືອກຮູບແບບການລຶບກ່ອນ");
+  const scope = scopeInput.value;
+  
+  const title = document.getElementById('auditTitleSelect').value;
+  const selectedId = document.getElementById('historySelect').value;
+
   try {
     const btn = document.querySelector('button[onclick="deleteAllHistory()"]');
     const originalText = btn.innerHTML;
     btn.innerHTML = '⏳ ກຳລັງລຶບ...';
     btn.disabled = true;
 
-    // ດຶງຂໍ້ມູນທັງໝົດໃນ Collection ມາ
-    const q = window.query(window.collection(window.db, "audit_records"));
-    const snap = await window.getDocs(q);
+    if (scope === 'single') {
+      // ລຶບລາຍການດຽວ (ງວດດຽວ)
+      await window.deleteDoc(window.doc(window.db, "audit_records", selectedId));
+    } 
+    else if (scope === 'activity') {
+      // ລຶບທຸກງວດໃນຊື່ການກວດສອບນີ້
+      const recordsToDelete = groupedHistories[title];
+      const deletePromises = recordsToDelete.map(record => 
+        window.deleteDoc(window.doc(window.db, "audit_records", record.id))
+      );
+      await Promise.all(deletePromises);
+    } 
+    else if (scope === 'all') {
+      // ລຶບທັງໝົດໃນຖານຂໍ້ມູນ
+      const q = window.query(window.collection(window.db, "audit_records"));
+      const snap = await window.getDocs(q);
+      const deletePromises = [];
+      snap.forEach(docSnap => {
+        deletePromises.push(window.deleteDoc(window.doc(window.db, "audit_records", docSnap.id)));
+      });
+      await Promise.all(deletePromises);
+    }
     
-    // ວົນລູບລຶບທຸກໆ Record
-    const deletePromises = [];
-    snap.forEach(documentSnapshot => {
-      deletePromises.push(window.deleteDoc(window.doc(window.db, "audit_records", documentSnapshot.id)));
-    });
-
-    await Promise.all(deletePromises);
-    
-    // ແຈ້ງເຕືອນສຳເລັດທີ່ປຸ່ມແທນການໃຊ້ alert ຕາມທີ່ຮຽກຮ້ອງ
     btn.innerHTML = '✅ ລຶບສຳເລັດແລ້ວ!';
     setTimeout(() => {
       btn.innerHTML = originalText;
       btn.disabled = false;
     }, 2500);
     
-    // === ເພີ່ມການລ້າງຄ່າໃນໜ້າຈໍ ===
-   allHistories = [];
-   groupedHistories = {};
-   results = []; // ລ້າງຂໍ້ມູນໃນຕາຕະລາງ
-   document.getElementById('auditTitleSelect').innerHTML = '<option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>';
-   document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
-    
-    // ລ້າງຄ່າສະຖິຕິ KPIs (ບັອກຕົວເລກ)
+    // ເຄລຍຄ່າໜ້າຈໍ ແລະ ໂຫຼດລາຍຊື່ Dropdown ໃໝ່ອັດຕະໂນມັດ
+    results = []; 
     document.getElementById('kPeople').textContent = '0';
     document.getElementById('kMatch').textContent = '0';
     document.getElementById('kPaid').textContent = '0';
     document.getElementById('kMoney').textContent = '0';
-    
-    // ຣີເຊັດຂໍ້ຄວາມສະຖານະ
-    document.getElementById('status').textContent = 'ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.';
-    
-    // ອັບເດດຕາຕະລາງໃຫ້ເປົ່າຫວ່າງ
+    document.getElementById('status').textContent = 'ຂໍ້ມູນຖືກລຶບສຳເລັດແລ້ວ.';
     render();
+    
+    await fetchHistoryList(); // ໂຫຼດລາຍຊື່ໃໝ່ຫຼັງຈາກລຶບ
     
   } catch (e) {
     console.error("ເກີດຂໍ້ຜິດພາດ: ", e);
