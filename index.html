@@ -825,7 +825,8 @@ function updateBatchDropdown() {
       
       const option = document.createElement('option');
       option.value = data.id;
-      option.textContent = `ງວດ ${data.batch} (ບັນທຶກ ${dateStr})`;
+      // ເພີ່ມ ປີ data.year ເຂົ້າໄປໃນຂໍ້ຄວາມ
+      option.textContent = `ງວດ ${data.batch} ປີ ${data.year} (ບັນທຶກ ${dateStr})`;
       select.appendChild(option);
     }
   });
@@ -934,7 +935,8 @@ function loadSelectedHistory() {
   document.getElementById('kPeople').textContent = '-';
   document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
   document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
-  document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ງວດ ${data.batch}`;
+  // ເພີ່ມ ປີ data.year ໃສ່ທ້າຍຂໍ້ຄວາມສະຖານະ
+  document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ງວດ ${data.batch} ປີ ${data.year}`;
   
   render();
 }
