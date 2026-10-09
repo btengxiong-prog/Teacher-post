@@ -182,9 +182,15 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
    <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
    <div class="field"><label>ສະຖານະ</label><select id="filter" onchange="render()"><option value="all">ທັງໝົດ</option><option value="found">ພົບການຈ່າຍ</option><option value="empty">ບໍ່ພົບການຈ່າຍ</option><option value="review">ຕ້ອງກວດດ້ວຍມື</option></select></div>
    <div class="field">
-     <label>ເລືອກປະຫວັດອອນໄລນ໌</label>
-     <select id="historySelect">
+     <label>ຊື່ການກວດສອບອອນໄລນ໌</label>
+     <select id="auditTitleSelect" onchange="updateBatchDropdown()">
        <option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>
+     </select>
+   </div>
+   <div class="field">
+     <label>ເລືອກງວດ</label>
+     <select id="historySelect">
+       <option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>
      </select>
    </div>
    <button class="secondary" style="margin-bottom: 2px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
@@ -720,7 +726,9 @@ async function saveToFirebase() {
     btn.innerHTML = '⏳ ກຳລັງບັນທຶກ...';
     btn.disabled = true;
 
-    const customId = `${manualYear}_batch_${manualBatch}`;
+    // ເພີ່ມຊື່ການກວດສອບເຂົ້າໃນ ID ເພື່ອບໍ່ໃຫ້ມັນຂຽນທັບກັນເມື່ອຊື່ການກວດສອບຕ່າງກັນ
+    const safeTitle = auditTitle.replace(/[\/\\#\?]/g, '-'); 
+    const customId = `${safeTitle}_${manualYear}_batch_${manualBatch}`;
     await window.setDoc(window.doc(window.db, "audit_records", customId), payload);
     
     btn.innerHTML = '✅ ບັນທຶກສຳເລັດ!';
@@ -737,6 +745,7 @@ async function saveToFirebase() {
 }
 
 let allHistories = []; 
+let groupedHistories = {}; // ສຳລັບເກັບແຍກຕາມຊື່ການກວດສອບ
 
 async function fetchHistoryList() {
   if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າ...");
@@ -753,37 +762,32 @@ async function fetchHistoryList() {
     }
     
     allHistories = []; 
-    const select = document.getElementById('historySelect');
-    
-    select.innerHTML = '<option value="">-- ເລືອກປະຫວັດທີ່ຕ້ອງການ --</option>';
-    select.innerHTML += '<option value="all" style="font-weight:bold; color:#0f766e;">-- 🌟 ສະແດງທັງໝົດທຸກງວດ --</option>';
-    
-    const seenBatches = new Set(); // ສ້າງຕົວແປເພື່ອກວດສອບງວດທີ່ຊ້ຳກັນ
+    groupedHistories = {};
     
     snap.forEach(doc => {
       const data = doc.data();
       data.id = doc.id;
+      allHistories.push(data);
       
-      // ສ້າງ Key ກວດສອບຊ້ຳກັນ ເຊັ່ນ "2026-1"
-      const uniqueKey = `${data.year}-${data.batch}`;
-      
-      // ເນື່ອງຈາກເຮົາ query ດຶງຂໍ້ມູນຫຼ້າສຸດມາກ່ອນ (orderBy desc) 
-      // ດັ່ງນັ້ນຖ້າພົບ Key ນີ້ແລ້ວ ຈະຂ້າມໂຕເກົ່າໄປເລີຍ
-      if (!seenBatches.has(uniqueKey)) {
-        seenBatches.add(uniqueKey);
-        allHistories.push(data);
-        
-        const d = new Date(data.timestamp);
-        const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
-        
-        const titleDisplay = data.auditTitle || `ປີ ${data.year}`; 
-        
-        const option = document.createElement('option');
-        option.value = doc.id;
-        option.textContent = `[${titleDisplay}] ງວດ ${data.batch} (ບັນທຶກ ${dateStr})`;
-        select.appendChild(option);
+      const titleDisplay = data.auditTitle || `ປີ ${data.year}`; 
+      if (!groupedHistories[titleDisplay]) {
+         groupedHistories[titleDisplay] = [];
       }
+      groupedHistories[titleDisplay].push(data);
     });
+    
+    const titleSelect = document.getElementById('auditTitleSelect');
+    titleSelect.innerHTML = '<option value="">-- ເລືອກຊື່ການກວດສອບ --</option>';
+    
+    // ໃສ່ລາຍຊື່ການກວດສອບລົງໃນ Dropdown ທີ 1
+    Object.keys(groupedHistories).forEach(title => {
+      const option = document.createElement('option');
+      option.value = title;
+      option.textContent = title;
+      titleSelect.appendChild(option);
+    });
+    
+    document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
     
     btn.innerHTML = '✅ ໂຫຼດສຳເລັດ';
     setTimeout(() => btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່', 3000);
@@ -795,20 +799,56 @@ async function fetchHistoryList() {
   }
 }
 
+// ຟັງຊັນໃໝ່: ເມື່ອເລືອກຊື່ການກວດສອບ ແລ້ວສະແດງງວດຂອງຊື່ນັ້ນ
+function updateBatchDropdown() {
+  const title = document.getElementById('auditTitleSelect').value;
+  const select = document.getElementById('historySelect');
+  
+  if(!title) {
+    select.innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
+    return;
+  }
+  
+  select.innerHTML = '<option value="">-- ເລືອກງວດ --</option>';
+  select.innerHTML += '<option value="all" style="font-weight:bold; color:#0f766e;">-- 🌟 ສະແດງທັງໝົດທຸກງວດ (ໃນຊື່ນີ້) --</option>';
+  
+  const records = groupedHistories[title];
+  const seenBatches = new Set();
+  
+  records.forEach(data => {
+    const uniqueKey = `${data.year}-${data.batch}`;
+    if (!seenBatches.has(uniqueKey)) {
+      seenBatches.add(uniqueKey);
+      
+      const d = new Date(data.timestamp);
+      const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
+      
+      const option = document.createElement('option');
+      option.value = data.id;
+      option.textContent = `ງວດ ${data.batch} (ບັນທຶກ ${dateStr})`;
+      select.appendChild(option);
+    }
+  });
+}
+
 function loadSelectedHistory() {
+  const title = document.getElementById('auditTitleSelect').value;
   const selectedId = document.getElementById('historySelect').value;
-  if(!selectedId) return alert("ກະລຸນາເລືອກປະຫວັດຈາກຊ່ອງເລືອກກ່ອນ");
+  
+  if(!title) return alert("ກະລຸນາເລືອກ 'ຊື່ການກວດສອບອອນໄລນ໌' ກ່ອນ");
+  if(!selectedId) return alert("ກະລຸນາເລືອກ 'ງວດ' ກ່ອນ");
   
   if(selectedId === 'all') {
     let combinedMap = new Map();
     let grandTotalMoney = 0;
 
-    allHistories.forEach(history => {
-      if(!history.details) return; // ກັນ Error ຖ້າບໍ່ມີ details
+    const records = groupedHistories[title];
+
+    records.forEach(history => {
+      if(!history.details) return;
       history.details.forEach(d => {
         let key = normName(d.name); 
         
-        // --- ຖ້າຍັງບໍ່ມີຄົນນີ້ໃນ Map, ໃຫ້ເພີ່ມເຂົ້າໄປ ---
         if(!combinedMap.has(key)) {
           combinedMap.set(key, {
             name: d.name,
@@ -822,7 +862,6 @@ function loadSelectedHistory() {
             rows: []
           });
         } else {
-          // --- ຖ້າມີແລ້ວ ແຕ່ບາງງວດອາດຈະບໍ່ມີວັນທີ (ເປັນ '-') ໃຫ້ດຶງຈາກງວດທີ່ມີວັນທີມາໃສ່ແທນ ---
           let existing = combinedMap.get(key);
           if (existing.birth === '-' && d.birth && d.birth !== '-') existing.birth = d.birth;
           if (existing.join === '-' && d.join && d.join !== '-') existing.join = d.join;
@@ -861,13 +900,12 @@ function loadSelectedHistory() {
     document.getElementById('kPeople').textContent = '-';
     document.getElementById('kMatch').textContent = results.length.toLocaleString();
     document.getElementById('kMoney').textContent = grandTotalMoney.toLocaleString();
-    document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ທັງໝົດທຸກງວດ (ລວມພົບ ${results.length} ຄົນ)`;
+    document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ທັງໝົດທຸກງວດ (ລວມພົບ ${results.length} ຄົນ)`;
     
     render();
     return; 
   }
 
-  // --- ສຳລັບການໂຫຼດປະຫວັດງວດດຽວ ---
   const data = allHistories.find(x => x.id === selectedId);
   if(!data) return;
 
@@ -896,7 +934,7 @@ function loadSelectedHistory() {
   document.getElementById('kPeople').textContent = '-';
   document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
   document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
-  document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດຂອງ [${data.auditTitle || 'ປີ '+data.year}] ງວດ ${data.batch}`;
+  document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ງວດ ${data.batch}`;
   
   render();
 }
@@ -938,9 +976,11 @@ async function confirmDelete() {
     }, 2500);
     
     // === ເພີ່ມການລ້າງຄ່າໃນໜ້າຈໍ ===
-    allHistories = [];
-    results = []; // ລ້າງຂໍ້ມູນໃນຕາຕະລາງ
-    document.getElementById('historySelect').innerHTML = '<option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>';
+   allHistories = [];
+   groupedHistories = {};
+   results = []; // ລ້າງຂໍ້ມູນໃນຕາຕະລາງ
+   document.getElementById('auditTitleSelect').innerHTML = '<option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>';
+   document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
     
     // ລ້າງຄ່າສະຖິຕິ KPIs (ບັອກຕົວເລກ)
     document.getElementById('kPeople').textContent = '0';
