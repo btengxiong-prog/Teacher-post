@@ -167,7 +167,6 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
           
           <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
             <button class="secondary" onclick="downloadCSV()">⬇️ Export CSV</button>
-            <button class="primary" style="background:#0284c7" onclick="saveToFirebase()">☁️ ບັນທຶກຂຶ້ນອອນໄລນ໌</button>
           </div>
         </div>
         <div id="status" class="status">ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.</div>
@@ -679,6 +678,9 @@ function run(){
  document.getElementById('kMoney').textContent=results.reduce((a,x)=>a+x.totalBatchMoney,0).toLocaleString(); 
  document.getElementById('status').textContent=`✅ ກວດສອບສຳເລັດ: ${results.length.toLocaleString()} ຄົນ, ພົບລາຍການເງິນ ${results.reduce((a,x)=>a+x.rows.length,0).toLocaleString()} ລາຍການ`;
  render();
+ 
+ // ເອີ້ນໃຊ້ງານຟັງຊັນບັນທຶກຂຶ້ນອອນໄລນ໌ອັດຕະໂນມັດ ຫຼັງຈາກ render ຂໍ້ມູນສຳເລັດ
+ saveToFirebase();
 }
 
 function money(n){return Number(n||0).toLocaleString('lo-LA')}
@@ -719,13 +721,13 @@ function downloadCSV(){
 
 async function saveToFirebase() {
   if(!window.db) {
-    alert("ລະບົບກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງແລ້ວກົດໃໝ່.");
+    console.warn("ລະບົບຍັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນບໍ່ສຳເລັດ, ບໍ່ສາມາດບັນທຶກອັດຕະໂນມັດໄດ້.");
     return;
   }
   
   const arr = results.filter(x => x.selected !== false && x.rows.length > 0);
   if(!arr.length){
-    alert('ບໍ່ມີລາຍການທີ່ພົບເງິນອາຍັດໃຫ້ບັນທຶກ');
+    // ຖ້າບໍ່ພົບເງິນເລີຍ ບໍ່ຕ້ອງບັນທຶກອັດຕະໂນມັດ (ແລະ ບໍ່ຕ້ອງແຈ້ງເຕືອນກວນໃຈ)
     return;
   }
 
@@ -734,7 +736,6 @@ async function saveToFirebase() {
   const auditTitle = document.getElementById('auditTitle').value.trim() || `ປະຈຳປີ ${manualYear}`; 
   const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
-  // === ອັບເດດໃຫ້ດຶງເອົາວັນທີ ວັນເກີດ, ສັງກັດລັດ, ປະລະ ລົງໄປພ້ອມ ===
   const matchedDetails = arr.map(x => ({
     id: x.id,
     name: x.name,
@@ -758,26 +759,21 @@ async function saveToFirebase() {
   };
 
   try {
-    const btn = document.querySelector('button[onclick="saveToFirebase()"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ ກຳລັງບັນທຶກ...';
-    btn.disabled = true;
+    // ດຶງຂໍ້ຄວາມສະຖານະເດີມມາ ແລ້ວແຈ້ງເຕືອນຕໍ່ທ້າຍ
+    const statusEl = document.getElementById('status');
+    const originalStatus = statusEl.innerHTML;
+    statusEl.innerHTML = originalStatus + '<br><span style="color:#0284c7; margin-top:5px; display:block;">⏳ ກຳລັງບັນທຶກຂຶ້ນອອນໄລນ໌ອັດຕະໂນມັດ...</span>';
 
-    // ເພີ່ມຊື່ການກວດສອບເຂົ້າໃນ ID ເພື່ອບໍ່ໃຫ້ມັນຂຽນທັບກັນເມື່ອຊື່ການກວດສອບຕ່າງກັນ
     const safeTitle = auditTitle.replace(/[\/\\#\?]/g, '-'); 
     const customId = `${safeTitle}_${manualYear}_batch_${manualBatch}`;
     await window.setDoc(window.doc(window.db, "audit_records", customId), payload);
     
-    btn.innerHTML = '✅ ບັນທຶກສຳເລັດ!';
-    setTimeout(() => { 
-      btn.innerHTML = originalText; 
-      btn.disabled = false; 
-    }, 3000);
+    // ເມື່ອສຳເລັດ ປ່ຽນຂໍ້ຄວາມເປັນສຳເລັດ
+    statusEl.innerHTML = originalStatus + '<br><span style="color:#166534; font-weight:bold; margin-top:5px; display:block;">☁️ ✅ ບັນທຶກອອນໄລນ໌ອັດຕະໂນມັດ ສຳເລັດແລ້ວ!</span>';
     
   } catch (e) {
     console.error("Error adding document: ", e);
-    alert('ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: ' + e.message);
-    document.querySelector('button[onclick="saveToFirebase()"]').disabled = false;
+    document.getElementById('status').innerHTML += `<br><span style="color:#b42318; margin-top:5px; display:block;">❌ ເກີດຂໍ້ຜິດພາດການບັນທຶກອອນໄລນ໌: ${e.message}</span>`;
   }
 }
 
