@@ -692,12 +692,15 @@ async function saveToFirebase() {
   const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
   const matchedDetails = arr.map(x => ({
-    id: x.id,
-    name: x.name,
-    agreement: x.agreement || '-',
-    freezeDate: x.freezeDate || '-',
-    totalFrozen: x.totalBatchMoney
-  }));
+   id: x.id,
+   name: x.name,
+   birth: x.birth || '-',
+   join: x.join || '-',
+   leave: x.leave || '-',
+   agreement: x.agreement || '-',
+   freezeDate: x.freezeDate || '-',
+   totalFrozen: x.totalBatchMoney
+ }));
 
   const payload = {
     auditTitle: auditTitle,
@@ -802,15 +805,18 @@ function loadSelectedHistory() {
     allHistories.forEach(history => {
       history.details.forEach(d => {
         let key = normName(d.name); 
-        if(!combinedMap.has(key)) {
-          combinedMap.set(key, {
-            name: d.name,
-            freezeDate: d.freezeDate,
-            agreement: d.agreement,
-            totalBatchMoney: 0,
-            rows: []
-          });
-        }
+       if(!combinedMap.has(key)) {
+         combinedMap.set(key, {
+           name: d.name,
+           birth: d.birth || '-',
+           join: d.join || '-',
+           leave: d.leave || '-',
+           freezeDate: d.freezeDate,
+           agreement: d.agreement,
+           totalBatchMoney: 0,
+           rows: []
+         });
+       }
         let person = combinedMap.get(key);
         person.totalBatchMoney += d.totalFrozen; 
         person.rows.push({
@@ -826,7 +832,7 @@ function loadSelectedHistory() {
     results = Array.from(combinedMap.values()).map((p, i) => ({
       id: i + 1,
       name: p.name,
-      birth: '-', join: '-', leave: '-',
+      birth: p.birth, join: p.join, leave: p.leave,
       freezeDate: p.freezeDate,
       agreement: p.agreement,
       match: 100,
@@ -850,12 +856,14 @@ function loadSelectedHistory() {
   if(!data) return;
 
   results = data.details.map((d, i) => ({
-    id: i + 1,
-    name: d.name,
-    birth: '-', join: '-', leave: '-',
-    freezeDate: d.freezeDate,
-    agreement: d.agreement,
-    match: 100,
+   id: i + 1,
+   name: d.name,
+   birth: d.birth || '-', 
+   join: d.join || '-', 
+   leave: d.leave || '-',
+   freezeDate: d.freezeDate,
+   agreement: d.agreement,
+   match: 100,
     rows: [{
       batch: data.batch,
       year: data.year,
