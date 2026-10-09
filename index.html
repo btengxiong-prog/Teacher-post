@@ -911,8 +911,22 @@ async function confirmDelete() {
       btn.disabled = false;
     }, 2500);
     
+    // === ເພີ່ມການລ້າງຄ່າໃນໜ້າຈໍ ===
     allHistories = [];
+    results = []; // ລ້າງຂໍ້ມູນໃນຕາຕະລາງ
     document.getElementById('historySelect').innerHTML = '<option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>';
+    
+    // ລ້າງຄ່າສະຖິຕິ KPIs (ບັອກຕົວເລກ)
+    document.getElementById('kPeople').textContent = '0';
+    document.getElementById('kMatch').textContent = '0';
+    document.getElementById('kPaid').textContent = '0';
+    document.getElementById('kMoney').textContent = '0';
+    
+    // ຣີເຊັດຂໍ້ຄວາມສະຖານະ
+    document.getElementById('status').textContent = 'ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.';
+    
+    // ອັບເດດຕາຕະລາງໃຫ້ເປົ່າຫວ່າງ
+    render();
     
   } catch (e) {
     console.error("ເກີດຂໍ້ຜິດພາດ: ", e);
