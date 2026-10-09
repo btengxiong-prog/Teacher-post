@@ -165,7 +165,42 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
    </div>
   </div>
  </div>
+ <!-- Modal ສຳລັບແຈ້ງເຕືອນທົ່ວໄປ (ແທນ Alert ຂອງ Browser) -->
+ <div id="alertModal" class="modal-overlay">
+  <div class="modal-box">
+   <div id="alertIcon" class="modal-icon">ℹ️</div>
+   <div class="modal-title">ແຈ້ງເຕືອນ</div>
+   <div id="alertText" class="modal-text" style="font-size: 15px; margin-bottom: 25px;">...</div>
+   <div class="modal-actions">
+    <button class="primary" onclick="closeAlertModal()">ຕົກລົງ</button>
+   </div>
+  </div>
+ </div>
 <script>
+
+// ທັບຊ້ອນຄຳສັ່ງ alert() ເດີມຂອງ Browser ໃຫ້ມາໃຊ້ Custom Modal ແທນອັດຕະໂນມັດ
+window.alert = function(message) {
+  const modal = document.getElementById('alertModal');
+  const text = document.getElementById('alertText');
+  const icon = document.getElementById('alertIcon');
+
+  // ປ່ຽນໄອຄອນຕາມລັກສະນະຂອງຂໍ້ຄວາມແຈ້ງເຕືອນ
+  if (message.includes("ຜິດພາດ")) {
+    icon.textContent = '❌';
+  } else if (message.includes("ບໍ່ມີ") || message.includes("ກະລຸນາ") || message.includes("ເຕືອນ")) {
+    icon.textContent = '⚠️';
+  } else {
+    icon.textContent = 'ℹ️';
+  }
+
+  text.textContent = message;
+  modal.classList.add('active');
+};
+
+function closeAlertModal() {
+  document.getElementById('alertModal').classList.remove('active');
+}
+
 let firstPeople=[], salaryRows=[], results=[], lastCSV=[];
 
 const prefixRe=/^(ທ້າວ|ທ|ທີ່|ນາງສາວ|ນາງ|ອຈ|ອ ຈ|ດຣ|ສ ຈ|ພັນຕີ|ຮສ|ຜສ|ຮ ອ|ຮອ)[\s]+/i;
