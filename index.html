@@ -53,206 +53,207 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
 </style>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyBjLViQJx7ea5-wpgnxqvbgiPQYXRZH3zc",
-    authDomain: "teacher-post.firebaseapp.com",
-    projectId: "teacher-post",
-    storageBucket: "teacher-post.firebasestorage.app",
-    messagingSenderId: "599344976368",
-    appId: "1:599344976368:web:95ed8e25ae9242f4b04d35",
-    measurementId: "G-PSXJ7HK2KL"
-  };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBjLViQJx7ea5-wpgnxqvbgiPQYXRZH3zc",
+    authDomain: "teacher-post.firebaseapp.com",
+    projectId: "teacher-post",
+    storageBucket: "teacher-post.firebasestorage.app",
+    messagingSenderId: "599344976368",
+    appId: "1:599344976368:web:95ed8e25ae9242f4b04d35",
+    measurementId: "G-PSXJ7HK2KL"
+  };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-  window.db = db;
-  window.collection = collection;
-  window.addDoc = addDoc;
-  window.getDocs = getDocs;
-  window.query = query;
-  window.orderBy = orderBy;
-  window.limit = limit;
-  window.doc = doc;
-  window.setDoc = setDoc;
-  window.deleteDoc = deleteDoc;
+  window.db = db;
+  window.collection = collection;
+  window.addDoc = addDoc;
+  window.getDocs = getDocs;
+  window.query = query;
+  window.orderBy = orderBy;
+  window.limit = limit;
+  window.doc = doc;
+  window.setDoc = setDoc;
+  window.deleteDoc = deleteDoc;
 </script>
 
 </head>
 <body>
 <header style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-  <div>
-    <h1>📊 ລະບົບສັງລວມເງິນອາຍັດຕາມຂໍ້ຕົກລົງ</h1>
-    <p>ກວດຈັບບຸກຄົນຈາກໄຟລ໌ປະລະ → ກວດຂໍ້ມູນເງິນເດືອນຫຼາຍງວດ → ສະແດງງວດທີ່ມີການຈ່າຍ ແລະ ງວດທີ່ບໍ່ພົບ</p>
-  </div>
-  <div style="background:rgba(255,255,255,0.2); padding:10px 15px; border-radius:10px; display:flex; align-items:center; gap:12px;">
-    <span id="currentUserDisp" style="font-weight:bold; font-size:14px;">👤 ກຳລັງໂຫຼດ...</span>
-    <button class="danger" style="padding:6px 12px; font-size:12px;" onclick="logout()">ອອກລະບົບ</button>
-  </div>
+  <div>
+    <h1>📊 ລະບົບສັງລວມເງິນອາຍັດຕາມຂໍ້ຕົກລົງ</h1>
+    <p>ກວດຈັບບຸກຄົນຈາກໄຟລ໌ປະລະ → ກວດຂໍ້ມູນເງິນເດືອນຫຼາຍງວດ → ສະແດງງວດທີ່ມີການຈ່າຍ ແລະ ງວດທີ່ບໍ່ພົບ</p>
+  </div>
+  <div style="background:rgba(255,255,255,0.2); padding:10px 15px; border-radius:10px; display:flex; align-items:center; gap:12px;">
+    <span id="currentUserDisp" style="font-weight:bold; font-size:14px;">👤 ກຳລັງໂຫຼດ...</span>
+    <button class="danger" style="padding:6px 12px; font-size:12px;" onclick="logout()">ອອກລະບົບ</button>
+  </div>
 </header>
 
 <!-- ໜ້າຕ່າງ Login -->
 <div id="loginScreen">
-  <div class="login-box">
-    <h2>🔐 ເຂົ້າສູ່ລະບົບ</h2>
-    <input type="text" id="loginUser" placeholder="ຊື່ຜູ້ໃຊ້ (Username)">
-    <input type="password" id="loginPass" placeholder="ລະຫັດຜ່ານ (Password)" onkeypress="if(event.key==='Enter') handleLogin()">
-    <button id="loginBtn" class="primary" style="width:100%; font-size:16px; padding:12px;" onclick="handleLogin()">ເຂົ້າສູ່ລະບົບ</button>
-  </div>
+  <div class="login-box">
+    <h2>🔐 ເຂົ້າສູ່ລະບົບ</h2>
+    <input type="text" id="loginUser" placeholder="ຊື່ຜູ້ໃຊ້ (Username)">
+    <input type="password" id="loginPass" placeholder="ລະຫັດຜ່ານ (Password)" onkeypress="if(event.key==='Enter') handleLogin()">
+    <button id="loginBtn" class="primary" style="width:100%; font-size:16px; padding:12px;" onclick="handleLogin()">ເຂົ້າສູ່ລະບົບ</button>
+  </div>
 </div>
 
 <div class="wrap" id="mainWrap" style="display:none;">
 
-  <!-- ແຜງຄວບຄຸມ Admin (ຈະສະແດງສະເພາະ Admin) -->
-  <div id="adminPanel" class="card hidden" style="margin-bottom: 16px;">
-    <h2>👑 ແຜງຄວບຄຸມສຳລັບ Admin (ຈັດການຜູ້ໃຊ້)</h2>
-    <div class="controls">
-      <div class="field"><label>ຊື່ຜູ້ໃຊ້ໃໝ່</label><input type="text" id="newUsername" placeholder="Username"></div>
-      <div class="field"><label>ລະຫັດຜ່ານ</label><input type="text" id="newPassword" placeholder="Password"></div>
-      <div class="field"><label>ສິດການໃຊ້ງານ</label>
-        <select id="newRole">
-          <option value="user">ຜູ້ໃຊ້ທົ່ວໄປ (User)</option>
-          <option value="admin">ແອັດມິນ (Admin)</option>
-        </select>
-      </div>
-      <button class="primary" onclick="createUser()">+ ສ້າງຜູ້ໃຊ້</button>
-      <button class="secondary" onclick="loadUsers()">🔄 ໂຫຼດລາຍຊື່ໃໝ່</button>
-    </div>
-    <div class="table-wrap" style="max-height: 250px; margin-top: 15px;">
-      <table id="usersTable">
-        <thead><tr><th>ລ/ດ</th><th>ຊື່ຜູ້ໃຊ້</th><th>ລະຫັດຜ່ານ</th><th>ສິດ (Role)</th><th>ຈັດການ</th></tr></thead>
-        <tbody><tr><td colspan="5" class="muted" style="text-align:center;">ກຳລັງໂຫຼດ...</td></tr></tbody>
-      </table>
-    </div>
-  </div>
- <div class="grid">
-  <div class="card">
-    <h2>1. ໄຟລ໌ຂໍ້ມູນປະລະຕາມຂໍ້ຕົກລົງ</h2>
-   <div class="drop"><input id="file1" type="file" accept=".xlsx,.xls"></div>
-   <div id="info1" class="small" style="margin-top:8px">ຍັງບໍ່ເລືອກໄຟລ໌</div>
-  </div>
-  <div class="card">
-   <h2>2. ໄຟລ໌ເງິນເດືອນ / ງວດ</h2>
-   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-     <div class="field">
-       <label>ເລືອກງວດ</label>
-       <select id="inputBatch">
-         <option value="1">ງວດ 1 (ເດືອນ 1-3)</option>
-         <option value="2">ງວດ 2 (ເດືອນ 4-6)</option>
-         <option value="3">ງວດ 3 (ເດືອນ 7-9)</option>
-         <option value="4">ງວດ 4 (ເດືອນ 10-12)</option>
-       </select>
-     </div>
-     <div class="field">
-       <label>ປີ (YYYY)</label>
-       <input id="inputYear" type="text" value="2026" placeholder="ເຊັ່ນ: 2026">
-     </div>
-   </div>
-   <div class="drop"><input id="file2" type="file" accept=".xlsx,.xls" multiple></div>
-   <div id="info2" class="small" style="margin-top:8px">ເລືອກໄດ້ຫຼາຍໄຟລ໌ ແລະຫຼາຍງວດ</div>
-  </div>
- </div>
+  <!-- ແຜງຄວບຄຸມ Admin (ຈະສະແດງສະເພາະ Admin) -->
+  <div id="adminPanel" class="card hidden" style="margin-bottom: 16px;">
+    <h2>👑 ແຜງຄວບຄຸມສຳລັບ Admin (ຈັດການຜູ້ໃຊ້)</h2>
+    <div class="controls">
+      <div class="field"><label>ຊື່ຜູ້ໃຊ້ໃໝ່</label><input type="text" id="newUsername" placeholder="Username"></div>
+      <div class="field"><label>ລະຫັດຜ່ານ</label><input type="text" id="newPassword" placeholder="Password"></div>
+      <div class="field"><label>ສິດການໃຊ້ງານ</label>
+        <select id="newRole">
+          <option value="user">ຜູ້ໃຊ້ທົ່ວໄປ (User)</option>
+          <option value="admin">ແອັດມິນ (Admin)</option>
+        </select>
+      </div>
+      <button class="primary" onclick="createUser()">+ ສ້າງຜູ້ໃຊ້</button>
+      <button class="secondary" onclick="loadUsers()">🔄 ໂຫຼດລາຍຊື່ໃໝ່</button>
+    </div>
+    <div class="table-wrap" style="max-height: 250px; margin-top: 15px;">
+      <table id="usersTable">
+        <thead><tr><th>ລ/ດ</th><th>ຊື່ຜູ້ໃຊ້</th><th>ລະຫັດຜ່ານ</th><th>ສິດ (Role)</th><th>ຈັດການ</th></tr></thead>
+        <tbody><tr><td colspan="5" class="muted" style="text-align:center;">ກຳລັງໂຫຼດ...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+ <div class="grid">
+  <div class="card">
+1.     <h2>ໄຟລ໌ຂໍ້ມູນປະລະຕາມຂໍ້ຕົກລົງ
+</h2>
+   <div class="drop"><input id="file1" type="file" accept=".xlsx,.xls"></div>
+   <div id="info1" class="small" style="margin-top:8px">ຍັງບໍ່ເລືອກໄຟລ໌</div>
+  </div>
+  <div class="card">
+   <h2>2. ໄຟລ໌ເງິນເດືອນ / ງວດ</h2>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+     <div class="field">
+       <label>ເລືອກງວດ</label>
+       <select id="inputBatch">
+         <option value="1">ງວດ 1 (ເດືອນ 1-3)</option>
+         <option value="2">ງວດ 2 (ເດືອນ 4-6)</option>
+         <option value="3">ງວດ 3 (ເດືອນ 7-9)</option>
+         <option value="4">ງວດ 4 (ເດືອນ 10-12)</option>
+       </select>
+     </div>
+     <div class="field">
+       <label>ປີ (YYYY)</label>
+       <input id="inputYear" type="text" value="2026" placeholder="ເຊັ່ນ: 2026">
+     </div>
+   </div>
+   <div class="drop"><input id="file2" type="file" accept=".xlsx,.xls" multiple></div>
+   <div id="info2" class="small" style="margin-top:8px">ເລືອກໄດ້ຫຼາຍໄຟລ໌ ແລະຫຼາຍງວດ</div>
+  </div>
+ </div>
 
- <div class="card" style="margin-top:16px">
-  <h2>3. ການຕັ້ງຄ່າການກວດ</h2>
-  <div class="controls">
-   <div class="field"><label>ຄະແນນຕ່ຳສຸດທີ່ໃຫ້ຖືວ່າ Match</label><select id="threshold"><option value="95">95%</option><option value="90">90%</option><option value="85" selected>85%</option><option value="80">80%</option><option value="75">75%</option></select></div>
-   <div class="field"><label>ຈຳນວນເດືອນສູງສຸດຕໍ່ງວດ</label><select id="months"><option value="1">1 ເດືອນ</option><option value="2">2 ເດືອນ</option><option value="3" selected>3 ເດືອນ</option></select></div>
-   <div class="field"><label>ຊື່ການກວດສອບ</label><input id="auditTitle" type="text" placeholder="ເຊັ່ນ: ປະຈຳປີ 2026..." style="min-width: 170px;"></div>
-   <button class="primary" onclick="run()">🔎 ກວດສອບ ແລະ ສັງລວມ</button>
-   <button class="secondary" onclick="downloadCSV()">⬇️ Export CSV</button>
-   <button class="primary" style="background:#0284c7" onclick="saveToFirebase()">☁️ ບັນທຶກຂຶ້ນອອນໄລນ໌</button>
- </div>
-  <div id="status" class="status">ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.</div>
- </div>
+ <div class="card" style="margin-top:16px">
+  <h2>3. ການຕັ້ງຄ່າການກວດ</h2>
+  <div class="controls">
+   <div class="field"><label>ຄະແນນຕ່ຳສຸດທີ່ໃຫ້ຖືວ່າ Match</label><select id="threshold"><option value="95">95%</option><option value="90">90%</option><option value="85" selected>85%</option><option value="80">80%</option><option value="75">75%</option></select></div>
+   <div class="field"><label>ຈຳນວນເດືອນສູງສຸດຕໍ່ງວດ</label><select id="months"><option value="1">1 ເດືອນ</option><option value="2">2 ເດືອນ</option><option value="3" selected>3 ເດືອນ</option></select></div>
+   <div class="field"><label>ຊື່ການກວດສອບ</label><input id="auditTitle" type="text" placeholder="ເຊັ່ນ: ປະຈຳປີ 2026..." style="min-width: 170px;"></div>
+   <button class="primary" onclick="run()">🔎 ກວດສອບ ແລະ ສັງລວມ</button>
+   <button class="secondary" onclick="downloadCSV()">⬇️ Export CSV</button>
+   <button class="primary" style="background:#0284c7" onclick="saveToFirebase()">☁️ ບັນທຶກຂຶ້ນອອນໄລນ໌</button>
+ </div>
+  <div id="status" class="status">ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.</div>
+ </div>
 
- <div class="kpis">
-  <div class="kpi"><b id="kPeople">0</b><span>ຄົນໃນໄຟລ໌ປະລະ</span></div>
-  <div class="kpi"><b id="kMatch">0</b><span>ຄົນທີ່ພົບໃນເງິນເດືອນ</span></div>
-  <div class="kpi"><b id="kPaid">0</b><span>ລາຍການງວດທີ່ພົບການຈ່າຍ</span></div>
-  <div class="kpi"><b id="kMoney">0</b><span>ລວມເງິນອາຍັດທີ່ພົບ (ກີບ)</span></div>
- </div>
+ <div class="kpis">
+  <div class="kpi"><b id="kPeople">0</b><span>ຄົນໃນໄຟລ໌ປະລະ</span></div>
+  <div class="kpi"><b id="kMatch">0</b><span>ຄົນທີ່ພົບໃນເງິນເດືອນ</span></div>
+  <div class="kpi"><b id="kPaid">0</b><span>ລາຍການງວດທີ່ພົບການຈ່າຍ</span></div>
+  <div class="kpi"><b id="kMoney">0</b><span>ລວມເງິນອາຍັດທີ່ພົບ (ກີບ)</span></div>
+ </div>
 
- <div class="card" style="margin-top:16px">
-  <h2>4. ຜົນການກວດສອບ</h2>
-  <div class="controls">
-   <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
-   <div class="field"><label>ສະຖານະ</label><select id="filter" onchange="render()"><option value="all">ທັງໝົດ</option><option value="found">ພົບການຈ່າຍ</option><option value="empty">ບໍ່ພົບການຈ່າຍ</option><option value="review">ຕ້ອງກວດດ້ວຍມື</option></select></div>
-   <div class="field">
-     <label>ຊື່ການກວດສອບອອນໄລນ໌</label>
-     <select id="auditTitleSelect" onchange="updateBatchDropdown()">
-       <option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>
-     </select>
-   </div>
-   <div class="field">
-     <label>ເລືອກງວດ</label>
-     <select id="historySelect">
-       <option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>
-     </select>
-   </div>
-   <button class="secondary" style="margin-bottom: 2px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
-   <button class="primary" style="margin-bottom: 2px;" onclick="loadSelectedHistory()">👁️ ເບິ່ງຂໍ້ມູນ</button>
-   <button class="danger" style="margin-bottom: 2px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດທັງໝົດ</button>
- </div>
-  <div class="table-wrap">
-   <table id="resultTable"><thead><tr>
-    <th>ລ/ດ</th><th>ຊື່ຕາມໄຟລ໌ 1</th><th>ວັນເກີດ</th><th>ວັນສັງກັດລັດ</th><th>ວັນປະລະ</th><th>ວັນອາຍັດ</th><th>ຂໍ້ຕົກລົງ</th><th>Match</th><th>ງວດ/ເດືອນທີ່ພົບ</th><th>ເງິນທີ່ພົບ</th><th>ລວມເງິນ/ງວດ</th><th>ເລືອກ</th>
-   </tr></thead><tbody><tr><td colspan="12" class="muted" style="text-align:center;padding:25px">ຍັງບໍ່ມີຜົນ</td></tr></tbody></table>
-  </div>
- </div>
+ <div class="card" style="margin-top:16px">
+  <h2>4. ຜົນການກວດສອບ</h2>
+  <div class="controls">
+   <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
+   <div class="field"><label>ສະຖານະ</label><select id="filter" onchange="render()"><option value="all">ທັງໝົດ</option><option value="found">ພົບການຈ່າຍ</option><option value="empty">ບໍ່ພົບການຈ່າຍ</option><option value="review">ຕ້ອງກວດດ້ວຍມື</option></select></div>
+   <div class="field">
+     <label>ຊື່ການກວດສອບອອນໄລນ໌</label>
+     <select id="auditTitleSelect" onchange="updateBatchDropdown()">
+       <option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>
+     </select>
+   </div>
+   <div class="field">
+     <label>ເລືອກງວດ</label>
+     <select id="historySelect">
+       <option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>
+     </select>
+   </div>
+   <button class="secondary" style="margin-bottom: 2px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
+   <button class="primary" style="margin-bottom: 2px;" onclick="loadSelectedHistory()">👁️ ເບິ່ງຂໍ້ມູນ</button>
+   <button class="danger" style="margin-bottom: 2px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດທັງໝົດ</button>
+ </div>
+  <div class="table-wrap">
+   <table id="resultTable"><thead><tr>
+    <th>ລ/ດ</th><th>ຊື່ຕາມໄຟລ໌ 1</th><th>ວັນເກີດ</th><th>ວັນສັງກັດລັດ</th><th>ວັນປະລະ</th><th>ວັນອາຍັດ</th><th>ຂໍ້ຕົກລົງ</th><th>Match</th><th>ງວດ/ເດືອນທີ່ພົບ</th><th>ເງິນທີ່ພົບ</th><th>ລວມເງິນ/ງວດ</th><th>ເລືອກ</th>
+   </tr></thead><tbody><tr><td colspan="12" class="muted" style="text-align:center;padding:25px">ຍັງບໍ່ມີຜົນ</td></tr></tbody></table>
+  </div>
+ </div>
 </div>
 <!-- Modal ສຳລັບຢືນຢັນການລຶບ -->
- <div id="deleteModal" class="modal-overlay">
-  <div class="modal-box">
-   <div class="modal-icon">⚠️</div>
-   <div class="modal-title">ຢືນຢັນການລຶບປະຫວັດ</div>
-   <div class="modal-text">
-    ທ່ານຕ້ອງການລຶບຂໍ້ມູນປະຫວັດການກວດສອບ <b>"ທັງໝົດ"</b> ອອກຈາກລະບົບອອນໄລນ໌ແທ້ຫຼືບໍ່?<br><br>
-    <span style="color:#b42318;font-weight:600">(ໝາຍເຫດ: ຂໍ້ມູນທີ່ລຶບແລ້ວຈະບໍ່ສາມາດກູ້ຄືນໄດ້)</span>
-   </div>
-   <div class="modal-actions">
-    <button class="secondary" onclick="closeModal()">ຍົກເລີກ</button>
-    <button class="danger" onclick="confirmDelete()">ລຶບທັງໝົດ</button>
-   </div>
-  </div>
- </div>
- <!-- Modal ສຳລັບແຈ້ງເຕືອນທົ່ວໄປ (ແທນ Alert ຂອງ Browser) -->
- <div id="alertModal" class="modal-overlay">
-  <div class="modal-box">
-   <div id="alertIcon" class="modal-icon">ℹ️</div>
-   <div class="modal-title">ແຈ້ງເຕືອນ</div>
-   <div id="alertText" class="modal-text" style="font-size: 15px; margin-bottom: 25px;">...</div>
-   <div class="modal-actions">
-    <button class="primary" onclick="closeAlertModal()">ຕົກລົງ</button>
-   </div>
-  </div>
- </div>
+ <div id="deleteModal" class="modal-overlay">
+  <div class="modal-box">
+   <div class="modal-icon">⚠️</div>
+   <div class="modal-title">ຢືນຢັນການລຶບປະຫວັດ</div>
+   <div class="modal-text">
+    ທ່ານຕ້ອງການລຶບຂໍ້ມູນປະຫວັດການກວດສອບ <b>"ທັງໝົດ"</b> ອອກຈາກລະບົບອອນໄລນ໌ແທ້ຫຼືບໍ່?<br><br>
+    <span style="color:#b42318;font-weight:600">(ໝາຍເຫດ: ຂໍ້ມູນທີ່ລຶບແລ້ວຈະບໍ່ສາມາດກູ້ຄືນໄດ້)</span>
+   </div>
+   <div class="modal-actions">
+    <button class="secondary" onclick="closeModal()">ຍົກເລີກ</button>
+    <button class="danger" onclick="confirmDelete()">ລຶບທັງໝົດ</button>
+   </div>
+  </div>
+ </div>
+ <!-- Modal ສຳລັບແຈ້ງເຕືອນທົ່ວໄປ (ແທນ Alert ຂອງ Browser) -->
+ <div id="alertModal" class="modal-overlay">
+  <div class="modal-box">
+   <div id="alertIcon" class="modal-icon">ℹ️</div>
+   <div class="modal-title">ແຈ້ງເຕືອນ</div>
+   <div id="alertText" class="modal-text" style="font-size: 15px; margin-bottom: 25px;">...</div>
+   <div class="modal-actions">
+    <button class="primary" onclick="closeAlertModal()">ຕົກລົງ</button>
+   </div>
+  </div>
+ </div>
 <script>
 
 // ທັບຊ້ອນຄຳສັ່ງ alert() ເດີມຂອງ Browser ໃຫ້ມາໃຊ້ Custom Modal ແທນອັດຕະໂນມັດ
 window.alert = function(message) {
-  const modal = document.getElementById('alertModal');
-  const text = document.getElementById('alertText');
-  const icon = document.getElementById('alertIcon');
+  const modal = document.getElementById('alertModal');
+  const text = document.getElementById('alertText');
+  const icon = document.getElementById('alertIcon');
 
-  // ປ່ຽນໄອຄອນຕາມລັກສະນະຂອງຂໍ້ຄວາມແຈ້ງເຕືອນ
-  if (message.includes("ຜິດພາດ")) {
-    icon.textContent = '❌';
-  } else if (message.includes("ບໍ່ມີ") || message.includes("ກະລຸນາ") || message.includes("ເຕືອນ")) {
-    icon.textContent = '⚠️';
-  } else {
-    icon.textContent = 'ℹ️';
-  }
+  // ປ່ຽນໄອຄອນຕາມລັກສະນະຂອງຂໍ້ຄວາມແຈ້ງເຕືອນ
+  if (message.includes("ຜິດພາດ")) {
+    icon.textContent = '❌';
+  } else if (message.includes("ບໍ່ມີ") || message.includes("ກະລຸນາ") || message.includes("ເຕືອນ")) {
+    icon.textContent = '⚠️';
+  } else {
+    icon.textContent = 'ℹ️';
+  }
 
-  text.textContent = message;
-  modal.classList.add('active');
+  text.textContent = message;
+  modal.classList.add('active');
 };
 
 function closeAlertModal() {
-  document.getElementById('alertModal').classList.remove('active');
+  document.getElementById('alertModal').classList.remove('active');
 }
 // ==========================================
 // ລະບົບ Authentication ແລະ ຈັດການ User
@@ -261,170 +262,170 @@ let currentUser = null;
 
 // ກວດສອບ Session ເມື່ອໂຫຼດໜ້າເວັບ
 document.addEventListener('DOMContentLoaded', () => {
-  const saved = localStorage.getItem('sessionUser');
-  if(saved) {
-    setCurrentUser(JSON.parse(saved));
-  }
+  const saved = localStorage.getItem('sessionUser');
+  if(saved) {
+    setCurrentUser(JSON.parse(saved));
+  }
 });
 
 async function handleLogin() {
-  const u = document.getElementById('loginUser').value.trim();
-  const p = document.getElementById('loginPass').value.trim();
-  if(!u || !p) return alert("⚠️ ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານໃຫ້ຄົບຖ້ວນ");
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(!u || !p) return alert("⚠️ ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານໃຫ້ຄົບຖ້ວນ");
 
-  const btn = document.getElementById('loginBtn');
-  if(btn) {
-    btn.innerHTML = '⏳ ກຳລັງກວດສອບ...';
-    btn.disabled = true;
-  }
+  const btn = document.getElementById('loginBtn');
+  if(btn) {
+    btn.innerHTML = '⏳ ກຳລັງກວດສອບ...';
+    btn.disabled = true;
+  }
 
-  // 1. ກວດສອບ Master Admin Account (ບໍ່ຈຳກັດຕົວພິມນ້ອຍ/ໃຫຍ່)
-  if(u.toUpperCase() === 'XBL-ABANDON' && p === '@160800') {
-    setCurrentUser({ username: 'XBL-ABANDON', role: 'admin', isMaster: true });
-    if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
-    return;
-  }
+  // 1. ກວດສອບ Master Admin Account (ບໍ່ຈຳກັດຕົວພິມນ້ອຍ/ໃຫຍ່)
+  if(u.toUpperCase() === 'XBL-ABANDON' && p === '@160800') {
+    setCurrentUser({ username: 'XBL-ABANDON', role: 'admin', isMaster: true });
+    if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+    return;
+  }
 
-  // 2. ກວດສອບ User ຈາກ Firestore
-  try {
-    if(!window.db) throw new Error("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງແລ້ວກົດໃໝ່ (ຫຼືອິນເຕີເນັດມີບັນຫາ)");
-    const q = window.query(window.collection(window.db, "app_users"));
-    const snap = await window.getDocs(q);
-    
-    let foundUser = null;
-    snap.forEach(doc => {
-      const data = doc.data();
-      if(data.username === u && data.password === p) {
-        foundUser = { id: doc.id, ...data };
-      }
-    });
+  // 2. ກວດສອບ User ຈາກ Firestore
+  try {
+    if(!window.db) throw new Error("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງແລ້ວກົດໃໝ່ (ຫຼືອິນເຕີເນັດມີບັນຫາ)");
+    const q = window.query(window.collection(window.db, "app_users"));
+    const snap = await window.getDocs(q);
+    
+    let foundUser = null;
+    snap.forEach(doc => {
+      const data = doc.data();
+      if(data.username === u && data.password === p) {
+        foundUser = { id: doc.id, ...data };
+      }
+    });
 
-    if(foundUser) {
-      setCurrentUser(foundUser);
-      if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
-    } else {
-      alert("❌ ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!");
-      if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
-    }
-  } catch(e) {
-    alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
-    if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
-  }
+    if(foundUser) {
+      setCurrentUser(foundUser);
+      if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+    } else {
+      alert("❌ ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!");
+      if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+    }
+  } catch(e) {
+    alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+  }
 }
 
 function setCurrentUser(user) {
-  currentUser = user;
-  try {
-    localStorage.setItem('sessionUser', JSON.stringify(user));
-  } catch(e) {
-    console.warn("ບຼາວເຊີຂອງທ່ານອາດຖືກບລັອກການບັນທຶກ Session");
-  }
-  
-  // ປ່ຽນ UI ໃຫ້ໜ້າ Login ຫາຍໄປ ແລະ ເປີດໜ້າຫຼັກ
-  document.getElementById('loginScreen').classList.add('hidden');
-  document.getElementById('mainWrap').style.display = 'block';
-  document.getElementById('currentUserDisp').innerHTML = `👤 ${user.username} <span style="font-size:11px; background:#fff; color:#000; padding:2px 5px; border-radius:4px; margin-left:5px;">${user.role.toUpperCase()}</span>`;
-  
-  // ສະແດງ Admin Panel ຖ້າເປັນ Admin
-  if(user.role === 'admin') {
-    document.getElementById('adminPanel').classList.remove('hidden');
-    loadUsers();
-  }
+  currentUser = user;
+  try {
+    localStorage.setItem('sessionUser', JSON.stringify(user));
+  } catch(e) {
+    console.warn("ບຼາວເຊີຂອງທ່ານອາດຖືກບລັອກການບັນທຶກ Session");
+  }
+  
+  // ປ່ຽນ UI ໃຫ້ໜ້າ Login ຫາຍໄປ ແລະ ເປີດໜ້າຫຼັກ
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainWrap').style.display = 'block';
+  document.getElementById('currentUserDisp').innerHTML = `👤 ${user.username} <span style="font-size:11px; background:#fff; color:#000; padding:2px 5px; border-radius:4px; margin-left:5px;">${user.role.toUpperCase()}</span>`;
+  
+  // ສະແດງ Admin Panel ຖ້າເປັນ Admin
+  if(user.role === 'admin') {
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadUsers();
+  }
 }
 
 function logout() {
-  localStorage.removeItem('sessionUser');
-  location.reload();
+  localStorage.removeItem('sessionUser');
+  location.reload();
 }
 
 async function loadUsers() {
-  if(currentUser?.role !== 'admin') return;
-  try {
-    const snap = await window.getDocs(window.collection(window.db, "app_users"));
-    const tb = document.querySelector('#usersTable tbody');
-    let html = '';
-    let i = 1;
-    
-    // ສະແດງ Master Admin ກ່ອນ
-    html += `<tr style="background:#fef3c7;">
-      <td>-</td>
-      <td><b>XBL-ABANDON</b></td>
-      <td><span class="muted">***(ປິດບັງ)***</span></td>
-      <td>👑 Master Admin</td>
-      <td><span class="muted">ລຶບບໍ່ໄດ້</span></td>
-    </tr>`;
+  if(currentUser?.role !== 'admin') return;
+  try {
+    const snap = await window.getDocs(window.collection(window.db, "app_users"));
+    const tb = document.querySelector('#usersTable tbody');
+    let html = '';
+    let i = 1;
+    
+    // ສະແດງ Master Admin ກ່ອນ
+    html += `<tr style="background:#fef3c7;">
+      <td>-</td>
+      <td><b>XBL-ABANDON</b></td>
+      <td><span class="muted">***(ປິດບັງ)***</span></td>
+      <td>👑 Master Admin</td>
+      <td><span class="muted">ລຶບບໍ່ໄດ້</span></td>
+    </tr>`;
 
-    snap.forEach(doc => {
-      const d = doc.data();
-      html += `<tr>
-        <td>${i++}</td>
-        <td><b>${d.username}</b></td>
-        <td>${d.password}</td>
-        <td>${d.role === 'admin' ? '👑 ແອັດມິນ' : '👤 ທົ່ວໄປ'}</td>
-        <td><button class="danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteUser('${doc.id}', '${d.username}')">ລຶບ</button></td>
-      </tr>`;
-    });
-    
-    tb.innerHTML = html;
-  } catch(e) {
-    console.error(e);
-  }
+    snap.forEach(doc => {
+      const d = doc.data();
+      html += `<tr>
+        <td>${i++}</td>
+        <td><b>${d.username}</b></td>
+        <td>${d.password}</td>
+        <td>${d.role === 'admin' ? '👑 ແອັດມິນ' : '👤 ທົ່ວໄປ'}</td>
+        <td><button class="danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteUser('${doc.id}', '${d.username}')">ລຶບ</button></td>
+      </tr>`;
+    });
+    
+    tb.innerHTML = html;
+  } catch(e) {
+    console.error(e);
+  }
 }
 
 async function createUser() {
-  if(currentUser?.role !== 'admin') return;
-  const u = document.getElementById('newUsername').value.trim();
-  const p = document.getElementById('newPassword').value.trim();
-  const r = document.getElementById('newRole').value;
-  
-  if(!u || !p) return alert("⚠️ ກະລຸນາປ້ອນຊື່ ແລະ ລະຫັດຜ່ານຂອງຜູ້ໃຊ້ໃໝ່");
-  if(u === 'XBL-ABANDON') return alert("❌ ບໍ່ສາມາດໃຊ້ຊື່ນີ້ໄດ້ (ສະຫງວນໄວ້ສຳລັບລະບົບ)");
+  if(currentUser?.role !== 'admin') return;
+  const u = document.getElementById('newUsername').value.trim();
+  const p = document.getElementById('newPassword').value.trim();
+  const r = document.getElementById('newRole').value;
+  
+  if(!u || !p) return alert("⚠️ ກະລຸນາປ້ອນຊື່ ແລະ ລະຫັດຜ່ານຂອງຜູ້ໃຊ້ໃໝ່");
+  if(u === 'XBL-ABANDON') return alert("❌ ບໍ່ສາມາດໃຊ້ຊື່ນີ້ໄດ້ (ສະຫງວນໄວ້ສຳລັບລະບົບ)");
 
-  try {
-    const btn = document.querySelector('button[onclick="createUser()"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ ກຳລັງສ້າງ...';
-    btn.disabled = true;
+  try {
+    const btn = document.querySelector('button[onclick="createUser()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ ກຳລັງສ້າງ...';
+    btn.disabled = true;
 
-    // ກວດສອບຊື່ຊ້ຳກັນ
-    const snap = await window.getDocs(window.collection(window.db, "app_users"));
-    let isDuplicate = false;
-    snap.forEach(doc => { if(doc.data().username === u) isDuplicate = true; });
-    
-    if(isDuplicate) {
-      alert("❌ ຊື່ຜູ້ໃຊ້ນີ້ມີໃນລະບົບແລ້ວ ກະລຸນາປ່ຽນຊື່ໃໝ່!");
-      btn.innerHTML = originalText; btn.disabled = false;
-      return;
-    }
+    // ກວດສອບຊື່ຊ້ຳກັນ
+    const snap = await window.getDocs(window.collection(window.db, "app_users"));
+    let isDuplicate = false;
+    snap.forEach(doc => { if(doc.data().username === u) isDuplicate = true; });
+    
+    if(isDuplicate) {
+      alert("❌ ຊື່ຜູ້ໃຊ້ນີ້ມີໃນລະບົບແລ້ວ ກະລຸນາປ່ຽນຊື່ໃໝ່!");
+      btn.innerHTML = originalText; btn.disabled = false;
+      return;
+    }
 
-    // ບັນທຶກລົງຖານຂໍ້ມູນ
-    await window.addDoc(window.collection(window.db, "app_users"), {
-      username: u, password: p, role: r, created_at: new Date().toISOString()
-    });
+    // ບັນທຶກລົງຖານຂໍ້ມູນ
+    await window.addDoc(window.collection(window.db, "app_users"), {
+      username: u, password: p, role: r, created_at: new Date().toISOString()
+    });
 
-    document.getElementById('newUsername').value = '';
-    document.getElementById('newPassword').value = '';
-    btn.innerHTML = '✅ ສຳເລັດ!';
-    
-    setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
-    loadUsers();
-    
-  } catch(e) {
-    alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
-    document.querySelector('button[onclick="createUser()"]').disabled = false;
-  }
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    btn.innerHTML = '✅ ສຳເລັດ!';
+    
+    setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+    loadUsers();
+    
+  } catch(e) {
+    alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    document.querySelector('button[onclick="createUser()"]').disabled = false;
+  }
 }
 
 async function deleteUser(id, username) {
-  if(currentUser?.role !== 'admin') return;
-  if(window.confirm(`⚠️ ຢືນຢັນການລຶບຜູ້ໃຊ້ "${username}" ອອກຈາກລະບົບແທ້ບໍ່?`)) {
-    try {
-      await window.deleteDoc(window.doc(window.db, "app_users", id));
-      loadUsers();
-    } catch(e) {
-      alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
-    }
-  }
+  if(currentUser?.role !== 'admin') return;
+  if(window.confirm(`⚠️ ຢືນຢັນການລຶບຜູ້ໃຊ້ "${username}" ອອກຈາກລະບົບແທ້ບໍ່?`)) {
+    try {
+      await window.deleteDoc(window.doc(window.db, "app_users", id));
+      loadUsers();
+    } catch(e) {
+      alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    }
+  }
 }
 // ==========================================
 let firstPeople=[], salaryRows=[], results=[], lastCSV=[];
@@ -432,55 +433,55 @@ let firstPeople=[], salaryRows=[], results=[], lastCSV=[];
 const prefixRe=/^(ທ້າວ|ທ|ທີ່|ນາງສາວ|ນາງ|ອຈ|ອ ຈ|ດຣ|ສ ຈ|ພັນຕີ|ຮສ|ຜສ|ຮ ອ|ຮອ)[\s]+/i;
 function clean(v){return v==null?'':String(v).replace(/\u00a0/g,' ').replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();}
 function normName(v){
- let s=clean(v).toLowerCase();
- s=s.replace(/[.,:;'"“”‘’(){}\[\]\/\\-]/g,' '); 
- s=s.replace(prefixRe,''); 
- s=s.replace(/[\u0EC8-\u0ECC]/g, ''); 
- s=s.replace(/\s+/g,' ').trim();
- return s;
+ let s=clean(v).toLowerCase();
+ s=s.replace(/[.,:;'"“”‘’(){}\[\]\/\\-]/g,' '); 
+ s=s.replace(prefixRe,''); 
+ s=s.replace(/[\u0EC8-\u0ECC]/g, ''); 
+ s=s.replace(/\s+/g,' ').trim();
+ return s;
 }
 function tokens(s){return normName(s).split(' ').filter(Boolean)}
 function levenshtein(a,b){
- const A=[...a],B=[...b],m=A.length,n=B.length;
- let p=Array(n+1).fill(0).map((_,j)=>j);
- for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(c[j-1]+1,p[j]+1,p[j-1]+(A[i-1]===B[j-1]?0:1));p=c}return p[n];
+ const A=[...a],B=[...b],m=A.length,n=B.length;
+ let p=Array(n+1).fill(0).map((_,j)=>j);
+ for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(c[j-1]+1,p[j]+1,p[j-1]+(A[i-1]===B[j-1]?0:1));p=c}return p[n];
 }
 function nameScore(a,b){
- a=normName(a);b=normName(b);if(!a||!b)return 0;if(a===b)return 1;
- let d=levenshtein(a,b), sim=1-d/Math.max(a.length,b.length);
- let ta=tokens(a),tb=tokens(b), common=ta.filter(x=>tb.includes(x)).length/Math.max(ta.length,tb.length);
- return Math.max(sim,common*.98);
+ a=normName(a);b=normName(b);if(!a||!b)return 0;if(a===b)return 1;
+ let d=levenshtein(a,b), sim=1-d/Math.max(a.length,b.length);
+ let ta=tokens(a),tb=tokens(b), common=ta.filter(x=>tb.includes(x)).length/Math.max(ta.length,tb.length);
+ return Math.max(sim,common*.98);
 }
 
 function dateKey(v){
-  if(v == null || v === '') return '';
-  if(typeof v === 'number'){
-    const d = XLSX.SSF.parse_date_code(v);
-    if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
-  }
-  if(v instanceof Date && !isNaN(v)) {
-    const y = v.getFullYear();
-    const m = String(v.getMonth() + 1).padStart(2, '0');
-    const d = String(v.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
-  }
-  let s = String(v).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
-  if(!s) return '';
-  let m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/); 
-  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
-  m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); 
-  if(m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
-  return s;
+  if(v == null || v === '') return '';
+  if(typeof v === 'number'){
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+  }
+  if(v instanceof Date && !isNaN(v)) {
+    const y = v.getFullYear();
+    const m = String(v.getMonth() + 1).padStart(2, '0');
+    const d = String(v.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
+  let s = String(v).replace(/\u00a0/g,' ').replace(/\s+/g,' ').trim();
+  if(!s) return '';
+  let m = s.match(/^(\d{1,2})[-\/](\d{1,2})[-\/](\d{4})/); 
+  if(m) return `${m[3]}-${String(m[2]).padStart(2,'0')}-${String(m[1]).padStart(2,'0')}`;
+  m = s.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})/); 
+  if(m) return `${m[1]}-${String(m[2]).padStart(2,'0')}-${String(m[3]).padStart(2,'0')}`;
+  return s;
 }
 
 function fmtDate(v){
-  let d = dateKey(v);
-  if(!d) return '-';
-  const parts = d.split('-');
-  if(parts.length === 3) {
-    return `${parts[2]}/${parts[1]}/${parts[0]}`; 
-  }
-  return d;
+  let d = dateKey(v);
+  if(!d) return '-';
+  const parts = d.split('-');
+  if(parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`; 
+  }
+  return d;
 }
 
 function num(v){if(typeof v==='number')return v;let s=clean(v).replace(/,/g,'').replace(/[^\d.-]/g,'');return Number(s)||0}
@@ -492,515 +493,515 @@ document.getElementById('file2').addEventListener('change',e=>loadSalary([...e.t
 async function readWB(file){return XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:false});}
 
 async function loadFirst(file){
- if(!file)return;
- const wb=await readWB(file); firstPeople=[];
- wb.SheetNames.forEach(sn=>{
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
-    let header=-1;
-    for(let i=0;i<Math.min(rows.length,20);i++) if(rowText(rows[i]).includes('ຊື່') && rowText(rows[i]).includes('ວັນ')) {header=i;break}
-    if(header<0) header=0;
-    for(let i=header+1;i<rows.length;i++){
-      const r=rows[i]||[]; 
-      const name = r[3]; 
-      if(!clean(name)||!clean(r[4]))continue;
-      if(rowText(r).includes('ລວມ')||rowText(r).includes('ຈຳນວນຄົນ'))continue;
+ if(!file)return;
+ const wb=await readWB(file); firstPeople=[];
+ wb.SheetNames.forEach(sn=>{
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
+    let header=-1;
+    for(let i=0;i<Math.min(rows.length,20);i++) if(rowText(rows[i]).includes('ຊື່') && rowText(rows[i]).includes('ວັນ')) {header=i;break}
+    if(header<0) header=0;
+    for(let i=header+1;i<rows.length;i++){
+      const r=rows[i]||[]; 
+      const name = r[3]; 
+      if(!clean(name)||!clean(r[4]))continue;
+      if(rowText(r).includes('ລວມ')||rowText(r).includes('ຈຳນວນຄົນ'))continue;
 
-      firstPeople.push({
-        sheet: sn,
-        row: i+1,
-        name: clean(name),
-        birth: dateKey(r[4]),  
-        join: dateKey(r[5]),   
-        place: clean(r[6]),            
-        district: clean(r[7]),         
-        province: clean(r[8]),         
-        leave: dateKey(r[9]),          
-        freezeDate: dateKey(r[10]), 
-        agreement: clean(r[1]),        
-        agreementDate: dateKey(r[2])   
-      });
-    }
- });
- document.getElementById('info1').textContent=`ອ່ານໄດ້ ${firstPeople.length.toLocaleString()} ຄົນ / ${wb.SheetNames.length} sheet`;
- document.getElementById('kPeople').textContent=firstPeople.length.toLocaleString();
+      firstPeople.push({
+        sheet: sn,
+        row: i+1,
+        name: clean(name),
+        birth: dateKey(r[4]),  
+        join: dateKey(r[5]),   
+        place: clean(r[6]),            
+        district: clean(r[7]),         
+        province: clean(r[8]),         
+        leave: dateKey(r[9]),          
+        freezeDate: dateKey(r[10]), 
+        agreement: clean(r[1]),        
+        agreementDate: dateKey(r[2])   
+      });
+    }
+ });
+ document.getElementById('info1').textContent=`ອ່ານໄດ້ ${firstPeople.length.toLocaleString()} ຄົນ / ${wb.SheetNames.length} sheet`;
+ document.getElementById('kPeople').textContent=firstPeople.length.toLocaleString();
 }
 
 async function loadSalary(files){
- salaryRows=[];
- const manualBatch = document.getElementById('inputBatch').value;
- const manualYear = document.getElementById('inputYear').value.trim();
- const manualMonths = manualBatch === '1' ? '1-3' : manualBatch === '2' ? '4-6' : manualBatch === '3' ? '7-9' : '10-12';
+ salaryRows=[];
+ const manualBatch = document.getElementById('inputBatch').value;
+ const manualYear = document.getElementById('inputYear').value.trim();
+ const manualMonths = manualBatch === '1' ? '1-3' : manualBatch === '2' ? '4-6' : manualBatch === '3' ? '7-9' : '10-12';
 
- for(const file of files){
-  const wb=await readWB(file);
-  for(const sn of wb.SheetNames){
-   const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
-   let header=-1;
-   for(let i=0;i<Math.min(rows.length,15);i++){
-    const t=rowText(rows[i]);
-    if(t.includes('ຊື່') && (t.includes('ເກີດ')||t.includes('ສັງກັດ'))) header=i;
-   }
-   for(let i=0;i<rows.length;i++){
-    const r=rows[i]||[], text=rowText(r);
-    if(header>=0 && i===header) continue;
-    if(r[1] && (dateKey(r[2]) || typeof r[2]==='number') && !text.includes('ລວມພາກສ່ວນ')){
-      const name=clean(r[1]);
-      salaryRows.push({
-       file:file.name,sheet:sn,row:i+1,name,
-       birth: dateKey(r[2]),          
-       join: dateKey(r[3]),           
-       salary:num(r[8]),totalBefore8:num(r[12]),after8:num(r[14]),taxAfter:num(r[21]),
-       received:num(r[29]),actual:num(r[31]),
-       batch: manualBatch, year: manualYear, months: manualMonths, title: text.slice(0,180),
-       raw:r
-      });
-    }
-   }
-  }
- }
- document.getElementById('info2').textContent=`ອ່ານໄດ້ ${salaryRows.length.toLocaleString()} ແຖວບຸກຄົນຈາກ ${files.length} ໄຟລ໌ (ງວດ ${manualBatch}/${manualYear})`;
+ for(const file of files){
+  const wb=await readWB(file);
+  for(const sn of wb.SheetNames){
+   const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:null,raw:true});
+   let header=-1;
+   for(let i=0;i<Math.min(rows.length,15);i++){
+    const t=rowText(rows[i]);
+    if(t.includes('ຊື່') && (t.includes('ເກີດ')||t.includes('ສັງກັດ'))) header=i;
+   }
+   for(let i=0;i<rows.length;i++){
+    const r=rows[i]||[], text=rowText(r);
+    if(header>=0 && i===header) continue;
+    if(r[1] && (dateKey(r[2]) || typeof r[2]==='number') && !text.includes('ລວມພາກສ່ວນ')){
+      const name=clean(r[1]);
+      salaryRows.push({
+       file:file.name,sheet:sn,row:i+1,name,
+       birth: dateKey(r[2]),          
+       join: dateKey(r[3]),           
+       salary:num(r[8]),totalBefore8:num(r[12]),after8:num(r[14]),taxAfter:num(r[21]),
+       received:num(r[29]),actual:num(r[31]),
+       batch: manualBatch, year: manualYear, months: manualMonths, title: text.slice(0,180),
+       raw:r
+      });
+    }
+   }
+  }
+ }
+ document.getElementById('info2').textContent=`ອ່ານໄດ້ ${salaryRows.length.toLocaleString()} ແຖວບຸກຄົນຈາກ ${files.length} ໄຟລ໌ (ງວດ ${manualBatch}/${manualYear})`;
 }
 
 function matchPerson(p, threshold){
- let best=null;
- for(const s of salaryRows){
-   const hasBirth = p.birth && s.birth;
-   const hasJoin = p.join && s.join;
-   const bdMatch = hasBirth ? (p.birth === s.birth) : true;
-   const jdMatch = hasJoin ? (p.join === s.join) : true;
+ let best=null;
+ for(const s of salaryRows){
+   const hasBirth = p.birth && s.birth;
+   const hasJoin = p.join && s.join;
+   const bdMatch = hasBirth ? (p.birth === s.birth) : true;
+   const jdMatch = hasJoin ? (p.join === s.join) : true;
 
-   if (!bdMatch || !jdMatch) continue;
+   if (!bdMatch || !jdMatch) continue;
 
-   const ns = nameScore(p.name, s.name);
-   if (ns * 100 < 50) continue;
+   const ns = nameScore(p.name, s.name);
+   if (ns * 100 < 50) continue;
 
-   let score = ns; 
-   if (!best || score > best.score) best = {s, score, ns, bd: 1, jd: 1};
- }
- return best && best.score * 100 >= threshold ? best : null;
+   let score = ns; 
+   if (!best || score > best.score) best = {s, score, ns, bd: 1, jd: 1};
+ }
+ return best && best.score * 100 >= threshold ? best : null;
 }
 
 function getMultiplier(freezeDate, batch, year, maxMonths) {
-  if (!freezeDate) return maxMonths;
-  const parts = freezeDate.split('-');
-  if (parts.length !== 3) return maxMonths;
-  const fYear = parseInt(parts[0], 10);
-  const fMonth = parseInt(parts[1], 10);
-  const bYear = parseInt(year, 10);
-  const bNum = parseInt(batch, 10);
-  if (isNaN(fYear) || isNaN(fMonth) || isNaN(bYear) || isNaN(bNum)) return maxMonths;
+  if (!freezeDate) return maxMonths;
+  const parts = freezeDate.split('-');
+  if (parts.length !== 3) return maxMonths;
+  const fYear = parseInt(parts[0], 10);
+  const fMonth = parseInt(parts[1], 10);
+  const bYear = parseInt(year, 10);
+  const bNum = parseInt(batch, 10);
+  if (isNaN(fYear) || isNaN(fMonth) || isNaN(bYear) || isNaN(bNum)) return maxMonths;
 
-  if (bYear < fYear) return 0; 
-  if (bYear > fYear) return maxMonths; 
+  if (bYear < fYear) return 0; 
+  if (bYear > fYear) return maxMonths; 
 
-  const startMonth = (bNum - 1) * 3 + 1;
-  const endMonth = bNum * 3;
+  const startMonth = (bNum - 1) * 3 + 1;
+  const endMonth = bNum * 3;
 
-  if (fMonth > endMonth) return 0; 
-  if (fMonth <= startMonth) return maxMonths; 
+  if (fMonth > endMonth) return 0; 
+  if (fMonth <= startMonth) return maxMonths; 
 
-  let validMonths = endMonth - fMonth + 1;
-  return Math.min(validMonths, maxMonths);
+  let validMonths = endMonth - fMonth + 1;
+  return Math.min(validMonths, maxMonths);
 }
 
 function run(){
- if(!firstPeople.length || !salaryRows.length){document.getElementById('status').textContent='⚠️ ກະລຸນາເລືອກໄຟລ໌ 1 ແລະໄຟລ໌ 2 ກ່ອນ';return}
- const th=Number(document.getElementById('threshold').value);
- const maxM=Number(document.getElementById('months').value)||3;
- results=firstPeople.map((p,i)=>{
-   const m=matchPerson(p,th);
-   if(!m)return {...p,id:i+1,match:0,rows:[],total:0,totalBatchMoney:0,status:'empty'};
-   const rows=salaryRows.filter(s=>{
-      const hasBirth = p.birth && s.birth;
-      const hasJoin = p.join && s.join;
-      const bdMatch = hasBirth ? (p.birth === s.birth) : true;
-      const jdMatch = hasJoin ? (p.join === s.join) : true;
-      if (!bdMatch || !jdMatch) return false;
-      const ns = nameScore(p.name, s.name);
-      return ns * 100 >= 50; 
-   });
-   const unique=rows.map((r,idx)=>({...r,_key:[r.file,r.sheet,r.row].join('|')})).filter((r,idx,a)=>a.findIndex(x=>x._key===r._key)===idx);
-   
-   let sum=0;
-   let totalBatchMoney=0;
-   const validUnique=[];
-   unique.forEach(r => {
-     const mult = getMultiplier(p.freezeDate, r.batch, r.year, maxM);
-     if (mult > 0) { 
-       r.calculatedMultiplier = mult;
-       const baseMoney = (r.actual||r.received||r.totalBefore8||0);
-       sum += baseMoney;
-       totalBatchMoney += (baseMoney * mult);
-       validUnique.push(r);
-     }
-   });
+ if(!firstPeople.length || !salaryRows.length){document.getElementById('status').textContent='⚠️ ກະລຸນາເລືອກໄຟລ໌ 1 ແລະໄຟລ໌ 2 ກ່ອນ';return}
+ const th=Number(document.getElementById('threshold').value);
+ const maxM=Number(document.getElementById('months').value)||3;
+ results=firstPeople.map((p,i)=>{
+   const m=matchPerson(p,th);
+   if(!m)return {...p,id:i+1,match:0,rows:[],total:0,totalBatchMoney:0,status:'empty'};
+   const rows=salaryRows.filter(s=>{
+      const hasBirth = p.birth && s.birth;
+      const hasJoin = p.join && s.join;
+      const bdMatch = hasBirth ? (p.birth === s.birth) : true;
+      const jdMatch = hasJoin ? (p.join === s.join) : true;
+      if (!bdMatch || !jdMatch) return false;
+      const ns = nameScore(p.name, s.name);
+      return ns * 100 >= 50; 
+   });
+   const unique=rows.map((r,idx)=>({...r,_key:[r.file,r.sheet,r.row].join('|')})).filter((r,idx,a)=>a.findIndex(x=>x._key===r._key)===idx);
+   
+   let sum=0;
+   let totalBatchMoney=0;
+   const validUnique=[];
+   unique.forEach(r => {
+     const mult = getMultiplier(p.freezeDate, r.batch, r.year, maxM);
+     if (mult > 0) { 
+       r.calculatedMultiplier = mult;
+       const baseMoney = (r.actual||r.received||r.totalBefore8||0);
+       sum += baseMoney;
+       totalBatchMoney += (baseMoney * mult);
+       validUnique.push(r);
+     }
+   });
 
-   return {...p,id:i+1,match:m.score*100,rows:validUnique,total:sum,totalBatchMoney:totalBatchMoney,status:validUnique.length?'found':'empty'};
- });
- document.getElementById('kMatch').textContent=results.filter(x=>x.rows.length).length.toLocaleString();
- document.getElementById('kPaid').textContent=results.reduce((a,x)=>a+x.rows.length,0).toLocaleString();
- document.getElementById('kMoney').textContent=results.reduce((a,x)=>a+x.totalBatchMoney,0).toLocaleString(); 
- document.getElementById('status').textContent=`✅ ກວດສອບສຳເລັດ: ${results.length.toLocaleString()} ຄົນ, ພົບລາຍການເງິນ ${results.reduce((a,x)=>a+x.rows.length,0).toLocaleString()} ລາຍການ`;
- render();
+   return {...p,id:i+1,match:m.score*100,rows:validUnique,total:sum,totalBatchMoney:totalBatchMoney,status:validUnique.length?'found':'empty'};
+ });
+ document.getElementById('kMatch').textContent=results.filter(x=>x.rows.length).length.toLocaleString();
+ document.getElementById('kPaid').textContent=results.reduce((a,x)=>a+x.rows.length,0).toLocaleString();
+ document.getElementById('kMoney').textContent=results.reduce((a,x)=>a+x.totalBatchMoney,0).toLocaleString(); 
+ document.getElementById('status').textContent=`✅ ກວດສອບສຳເລັດ: ${results.length.toLocaleString()} ຄົນ, ພົບລາຍການເງິນ ${results.reduce((a,x)=>a+x.rows.length,0).toLocaleString()} ລາຍການ`;
+ render();
 }
 
 function money(n){return Number(n||0).toLocaleString('lo-LA')}
 
 function render(){
- const q=normName(document.getElementById('search').value), f=document.getElementById('filter').value;
- let arr=results.filter(x=>(!q||normName(x.name).includes(q)) && (f==='all'||(f==='found'&&x.status==='found')||(f==='empty'&&x.status==='empty')));
- const tb=document.querySelector('#resultTable tbody');
- if(!arr.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:25px">ບໍ່ພົບຂໍ້ມູນ</td></tr>';return}
- tb.innerHTML=arr.map(x=>{
-   const periods=x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
-   const selected=`<input type="checkbox" ${x.rows.length?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
-   return `<tr>
-    <td>${x.id}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
-    <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
-    <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
-   </tr>`
- }).join('');
+ const q=normName(document.getElementById('search').value), f=document.getElementById('filter').value;
+ let arr=results.filter(x=>(!q||normName(x.name).includes(q)) && (f==='all'||(f==='found'&&x.status==='found')||(f==='empty'&&x.status==='empty')));
+ const tb=document.querySelector('#resultTable tbody');
+ if(!arr.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:25px">ບໍ່ພົບຂໍ້ມູນ</td></tr>';return}
+ tb.innerHTML=arr.map(x=>{
+   const periods=x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
+   const selected=`<input type="checkbox" ${x.rows.length?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
+   return `<tr>
+    <td>${x.id}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
+    <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
+    <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
+   </tr>`
+ }).join('');
 }
 
 function toggleSelect(id,on){const x=results.find(a=>a.id===id);if(x)x.selected=on}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function downloadCSV(){
- const arr=results.filter(x=>x.selected!==false);
- if(!arr.length){alert('ບໍ່ມີລາຍການໃຫ້ Export');return}
- let rows=[['ລ/ດ','ຊື່','ວັນເກີດ','ວັນສັງກັດລັດ','ວັນປະລະ','ວັນອາຍັດ','ເລກທີ່ຂໍ້ຕົກລົງ','Match %','ງວດ','ປີ','ເດືອນ','ຕົວຄູນ (ເດືອນ)','ເງິນອາຍັດ/ພົບ (ເດືອນ)', 'ລວມເງິນ/ງວດ']];
- arr.forEach(x=>{
-   if(!x.rows.length) rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),'','','',0,0,0]);
-   else x.rows.forEach(r=>{
-     const moneyFound = r.actual||r.received||r.totalBefore8||0;
-     const mult = r.calculatedMultiplier || 0;
-     rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),r.batch,r.year,r.months,mult,moneyFound, moneyFound * mult]);
-   });
- });
- const ws=XLSX.utils.aoa_to_sheet(rows), wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'ສັງລວມ');
- XLSX.writeFile(wb,'ສັງລວມເງິນອາຍັດ.xlsx');
+ const arr=results.filter(x=>x.selected!==false);
+ if(!arr.length){alert('ບໍ່ມີລາຍການໃຫ້ Export');return}
+ let rows=[['ລ/ດ','ຊື່','ວັນເກີດ','ວັນສັງກັດລັດ','ວັນປະລະ','ວັນອາຍັດ','ເລກທີ່ຂໍ້ຕົກລົງ','Match %','ງວດ','ປີ','ເດືອນ','ຕົວຄູນ (ເດືອນ)','ເງິນອາຍັດ/ພົບ (ເດືອນ)', 'ລວມເງິນ/ງວດ']];
+ arr.forEach(x=>{
+   if(!x.rows.length) rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),'','','',0,0,0]);
+   else x.rows.forEach(r=>{
+     const moneyFound = r.actual||r.received||r.totalBefore8||0;
+     const mult = r.calculatedMultiplier || 0;
+     rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),r.batch,r.year,r.months,mult,moneyFound, moneyFound * mult]);
+   });
+ });
+ const ws=XLSX.utils.aoa_to_sheet(rows), wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'ສັງລວມ');
+ XLSX.writeFile(wb,'ສັງລວມເງິນອາຍັດ.xlsx');
 }
 
 async function saveToFirebase() {
-  if(!window.db) {
-    alert("ລະບົບກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງແລ້ວກົດໃໝ່.");
-    return;
-  }
-  
-  const arr = results.filter(x => x.selected !== false && x.rows.length > 0);
-  if(!arr.length){
-    alert('ບໍ່ມີລາຍການທີ່ພົບເງິນອາຍັດໃຫ້ບັນທຶກ');
-    return;
-  }
+  if(!window.db) {
+    alert("ລະບົບກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງແລ້ວກົດໃໝ່.");
+    return;
+  }
+  
+  const arr = results.filter(x => x.selected !== false && x.rows.length > 0);
+  if(!arr.length){
+    alert('ບໍ່ມີລາຍການທີ່ພົບເງິນອາຍັດໃຫ້ບັນທຶກ');
+    return;
+  }
 
-  const manualYear = document.getElementById('inputYear').value.trim();
-  const manualBatch = document.getElementById('inputBatch').value;
-  const auditTitle = document.getElementById('auditTitle').value.trim() || `ປະຈຳປີ ${manualYear}`; 
-  const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
+  const manualYear = document.getElementById('inputYear').value.trim();
+  const manualBatch = document.getElementById('inputBatch').value;
+  const auditTitle = document.getElementById('auditTitle').value.trim() || `ປະຈຳປີ ${manualYear}`; 
+  const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
-  // === ອັບເດດໃຫ້ດຶງເອົາວັນທີ ວັນເກີດ, ສັງກັດລັດ, ປະລະ ລົງໄປພ້ອມ ===
-  const matchedDetails = arr.map(x => ({
-    id: x.id,
-    name: x.name,
-    birth: x.birth || '-',
-    join: x.join || '-',
-    leave: x.leave || '-',
-    agreement: x.agreement || '-',
-    agreementDate: x.agreementDate || '-',
-    freezeDate: x.freezeDate || '-',
-    totalFrozen: x.totalBatchMoney
-  }));
+  // === ອັບເດດໃຫ້ດຶງເອົາວັນທີ ວັນເກີດ, ສັງກັດລັດ, ປະລະ ລົງໄປພ້ອມ ===
+  const matchedDetails = arr.map(x => ({
+    id: x.id,
+    name: x.name,
+    birth: x.birth || '-',
+    join: x.join || '-',
+    leave: x.leave || '-',
+    agreement: x.agreement || '-',
+    agreementDate: x.agreementDate || '-',
+    freezeDate: x.freezeDate || '-',
+    totalFrozen: x.totalBatchMoney
+  }));
 
-  const payload = {
-    auditTitle: auditTitle,
-    year: manualYear,
-    batch: manualBatch,
-    totalPeopleMatched: arr.length,
-    totalMoneyFrozen: totalMoney,
-    details: matchedDetails,
-    timestamp: new Date().toISOString()
-  };
+  const payload = {
+    auditTitle: auditTitle,
+    year: manualYear,
+    batch: manualBatch,
+    totalPeopleMatched: arr.length,
+    totalMoneyFrozen: totalMoney,
+    details: matchedDetails,
+    timestamp: new Date().toISOString()
+  };
 
-  try {
-    const btn = document.querySelector('button[onclick="saveToFirebase()"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ ກຳລັງບັນທຶກ...';
-    btn.disabled = true;
+  try {
+    const btn = document.querySelector('button[onclick="saveToFirebase()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ ກຳລັງບັນທຶກ...';
+    btn.disabled = true;
 
-    // ເພີ່ມຊື່ການກວດສອບເຂົ້າໃນ ID ເພື່ອບໍ່ໃຫ້ມັນຂຽນທັບກັນເມື່ອຊື່ການກວດສອບຕ່າງກັນ
-    const safeTitle = auditTitle.replace(/[\/\\#\?]/g, '-'); 
-    const customId = `${safeTitle}_${manualYear}_batch_${manualBatch}`;
-    await window.setDoc(window.doc(window.db, "audit_records", customId), payload);
-    
-    btn.innerHTML = '✅ ບັນທຶກສຳເລັດ!';
-    setTimeout(() => { 
-      btn.innerHTML = originalText; 
-      btn.disabled = false; 
-    }, 3000);
-    
-  } catch (e) {
-    console.error("Error adding document: ", e);
-    alert('ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: ' + e.message);
-    document.querySelector('button[onclick="saveToFirebase()"]').disabled = false;
-  }
+    // ເພີ່ມຊື່ການກວດສອບເຂົ້າໃນ ID ເພື່ອບໍ່ໃຫ້ມັນຂຽນທັບກັນເມື່ອຊື່ການກວດສອບຕ່າງກັນ
+    const safeTitle = auditTitle.replace(/[\/\\#\?]/g, '-'); 
+    const customId = `${safeTitle}_${manualYear}_batch_${manualBatch}`;
+    await window.setDoc(window.doc(window.db, "audit_records", customId), payload);
+    
+    btn.innerHTML = '✅ ບັນທຶກສຳເລັດ!';
+    setTimeout(() => { 
+      btn.innerHTML = originalText; 
+      btn.disabled = false; 
+    }, 3000);
+    
+  } catch (e) {
+    console.error("Error adding document: ", e);
+    alert('ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ: ' + e.message);
+    document.querySelector('button[onclick="saveToFirebase()"]').disabled = false;
+  }
 }
 
 let allHistories = []; 
 let groupedHistories = {}; // ສຳລັບເກັບແຍກຕາມຊື່ການກວດສອບ
 
 async function fetchHistoryList() {
-  if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າ...");
-  try {
-    const btn = document.querySelector('button[onclick="fetchHistoryList()"]');
-    btn.innerHTML = '⏳ ກຳລັງໂຫຼດ...';
-    
-    const q = window.query(window.collection(window.db, "audit_records"), window.orderBy("timestamp", "desc"));
-    const snap = await window.getDocs(q);
-    
-    if(snap.empty) {
-      btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່';
-      return alert("ຍັງບໍ່ມີປະຫວັດຂໍ້ມູນໃນລະບົບອອນໄລນ໌");
-    }
-    
-    allHistories = []; 
-    groupedHistories = {};
-    
-    snap.forEach(doc => {
-      const data = doc.data();
-      data.id = doc.id;
-      allHistories.push(data);
-      
-      const titleDisplay = data.auditTitle || `ປີ ${data.year}`; 
-      if (!groupedHistories[titleDisplay]) {
-         groupedHistories[titleDisplay] = [];
-      }
-      groupedHistories[titleDisplay].push(data);
-    });
-    
-    const titleSelect = document.getElementById('auditTitleSelect');
-    titleSelect.innerHTML = '<option value="">-- ເລືອກຊື່ການກວດສອບ --</option>';
-    
-    // ໃສ່ລາຍຊື່ການກວດສອບລົງໃນ Dropdown ທີ 1
-    Object.keys(groupedHistories).forEach(title => {
-      const option = document.createElement('option');
-      option.value = title;
-      option.textContent = title;
-      titleSelect.appendChild(option);
-    });
-    
-    document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
-    
-    btn.innerHTML = '✅ ໂຫຼດສຳເລັດ';
-    setTimeout(() => btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່', 3000);
-    
-  } catch (e) {
-    console.error(e);
-    alert("ເກີດຂໍ້ຜິດພາດ: " + e.message);
-    document.querySelector('button[onclick="fetchHistoryList()"]').innerHTML = '🔄 ໂຫຼດລາຍຊື່';
-  }
+  if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າ...");
+  try {
+    const btn = document.querySelector('button[onclick="fetchHistoryList()"]');
+    btn.innerHTML = '⏳ ກຳລັງໂຫຼດ...';
+    
+    const q = window.query(window.collection(window.db, "audit_records"), window.orderBy("timestamp", "desc"));
+    const snap = await window.getDocs(q);
+    
+    if(snap.empty) {
+      btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່';
+      return alert("ຍັງບໍ່ມີປະຫວັດຂໍ້ມູນໃນລະບົບອອນໄລນ໌");
+    }
+    
+    allHistories = []; 
+    groupedHistories = {};
+    
+    snap.forEach(doc => {
+      const data = doc.data();
+      data.id = doc.id;
+      allHistories.push(data);
+      
+      const titleDisplay = data.auditTitle || `ປີ ${data.year}`; 
+      if (!groupedHistories[titleDisplay]) {
+         groupedHistories[titleDisplay] = [];
+      }
+      groupedHistories[titleDisplay].push(data);
+    });
+    
+    const titleSelect = document.getElementById('auditTitleSelect');
+    titleSelect.innerHTML = '<option value="">-- ເລືອກຊື່ການກວດສອບ --</option>';
+    
+    // ໃສ່ລາຍຊື່ການກວດສອບລົງໃນ Dropdown ທີ 1
+    Object.keys(groupedHistories).forEach(title => {
+      const option = document.createElement('option');
+      option.value = title;
+      option.textContent = title;
+      titleSelect.appendChild(option);
+    });
+    
+    document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
+    
+    btn.innerHTML = '✅ ໂຫຼດສຳເລັດ';
+    setTimeout(() => btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່', 3000);
+    
+  } catch (e) {
+    console.error(e);
+    alert("ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    document.querySelector('button[onclick="fetchHistoryList()"]').innerHTML = '🔄 ໂຫຼດລາຍຊື່';
+  }
 }
 
 // ຟັງຊັນໃໝ່: ເມື່ອເລືອກຊື່ການກວດສອບ ແລ້ວສະແດງງວດຂອງຊື່ນັ້ນ
 function updateBatchDropdown() {
-  const title = document.getElementById('auditTitleSelect').value;
-  const select = document.getElementById('historySelect');
-  
-  if(!title) {
-    select.innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
-    return;
-  }
-  
-  select.innerHTML = '<option value="">-- ເລືອກງວດ --</option>';
-  select.innerHTML += '<option value="all" style="font-weight:bold; color:#0f766e;">-- 🌟 ສະແດງທັງໝົດທຸກງວດ (ໃນຊື່ນີ້) --</option>';
-  
-  const records = groupedHistories[title];
-  const seenBatches = new Set();
-  
-  records.forEach(data => {
-    const uniqueKey = `${data.year}-${data.batch}`;
-    if (!seenBatches.has(uniqueKey)) {
-      seenBatches.add(uniqueKey);
-      
-      const d = new Date(data.timestamp);
-      const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
-      
-      const option = document.createElement('option');
-      option.value = data.id;
-      // ເພີ່ມ ປີ data.year ເຂົ້າໄປໃນຂໍ້ຄວາມ
-      option.textContent = `ງວດ ${data.batch} ປີ ${data.year} (ບັນທຶກ ${dateStr})`;
-      select.appendChild(option);
-    }
-  });
+  const title = document.getElementById('auditTitleSelect').value;
+  const select = document.getElementById('historySelect');
+  
+  if(!title) {
+    select.innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
+    return;
+  }
+  
+  select.innerHTML = '<option value="">-- ເລືອກງວດ --</option>';
+  select.innerHTML += '<option value="all" style="font-weight:bold; color:#0f766e;">-- 🌟 ສະແດງທັງໝົດທຸກງວດ (ໃນຊື່ນີ້) --</option>';
+  
+  const records = groupedHistories[title];
+  const seenBatches = new Set();
+  
+  records.forEach(data => {
+    const uniqueKey = `${data.year}-${data.batch}`;
+    if (!seenBatches.has(uniqueKey)) {
+      seenBatches.add(uniqueKey);
+      
+      const d = new Date(data.timestamp);
+      const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth()+1).padStart(2, '0')}/${d.getFullYear()}`;
+      
+      const option = document.createElement('option');
+      option.value = data.id;
+      // ເພີ່ມ ປີ data.year ເຂົ້າໄປໃນຂໍ້ຄວາມ
+      option.textContent = `ງວດ ${data.batch} ປີ ${data.year} (ບັນທຶກ ${dateStr})`;
+      select.appendChild(option);
+    }
+  });
 }
 
 function loadSelectedHistory() {
-  const title = document.getElementById('auditTitleSelect').value;
-  const selectedId = document.getElementById('historySelect').value;
-  
-  if(!title) return alert("ກະລຸນາເລືອກ 'ຊື່ການກວດສອບອອນໄລນ໌' ກ່ອນ");
-  if(!selectedId) return alert("ກະລຸນາເລືອກ 'ງວດ' ກ່ອນ");
-  
-  if(selectedId === 'all') {
-    let combinedMap = new Map();
-    let grandTotalMoney = 0;
+  const title = document.getElementById('auditTitleSelect').value;
+  const selectedId = document.getElementById('historySelect').value;
+  
+  if(!title) return alert("ກະລຸນາເລືອກ 'ຊື່ການກວດສອບອອນໄລນ໌' ກ່ອນ");
+  if(!selectedId) return alert("ກະລຸນາເລືອກ 'ງວດ' ກ່ອນ");
+  
+  if(selectedId === 'all') {
+    let combinedMap = new Map();
+    let grandTotalMoney = 0;
 
-    const records = groupedHistories[title];
+    const records = groupedHistories[title];
 
-    records.forEach(history => {
-      if(!history.details) return;
-      history.details.forEach(d => {
-        let key = normName(d.name); 
-        
-        if(!combinedMap.has(key)) {
-          combinedMap.set(key, {
-            name: d.name,
-            birth: (d.birth && d.birth !== '-') ? d.birth : '-',
-            join: (d.join && d.join !== '-') ? d.join : '-',
-            leave: (d.leave && d.leave !== '-') ? d.leave : '-',
-            freezeDate: d.freezeDate,
-            agreement: d.agreement,
-            agreementDate: d.agreementDate,
-            totalBatchMoney: 0,
-            rows: []
-          });
-        } else {
-          let existing = combinedMap.get(key);
-          if (existing.birth === '-' && d.birth && d.birth !== '-') existing.birth = d.birth;
-          if (existing.join === '-' && d.join && d.join !== '-') existing.join = d.join;
-          if (existing.leave === '-' && d.leave && d.leave !== '-') existing.leave = d.leave;
-        }
-        
-        let person = combinedMap.get(key);
-        person.totalBatchMoney += d.totalFrozen; 
-        person.rows.push({
-          batch: history.batch,
-          year: history.year,
-          months: '',
-          calculatedMultiplier: 'ລວມ' 
-        });
-        grandTotalMoney += d.totalFrozen; 
-      });
-    });
+    records.forEach(history => {
+      if(!history.details) return;
+      history.details.forEach(d => {
+        let key = normName(d.name); 
+        
+        if(!combinedMap.has(key)) {
+          combinedMap.set(key, {
+            name: d.name,
+            birth: (d.birth && d.birth !== '-') ? d.birth : '-',
+            join: (d.join && d.join !== '-') ? d.join : '-',
+            leave: (d.leave && d.leave !== '-') ? d.leave : '-',
+            freezeDate: d.freezeDate,
+            agreement: d.agreement,
+            agreementDate: d.agreementDate,
+            totalBatchMoney: 0,
+            rows: []
+          });
+        } else {
+          let existing = combinedMap.get(key);
+          if (existing.birth === '-' && d.birth && d.birth !== '-') existing.birth = d.birth;
+          if (existing.join === '-' && d.join && d.join !== '-') existing.join = d.join;
+          if (existing.leave === '-' && d.leave && d.leave !== '-') existing.leave = d.leave;
+        }
+        
+        let person = combinedMap.get(key);
+        person.totalBatchMoney += d.totalFrozen; 
+        person.rows.push({
+          batch: history.batch,
+          year: history.year,
+          months: '',
+          calculatedMultiplier: 'ລວມ' 
+        });
+        grandTotalMoney += d.totalFrozen; 
+      });
+    });
 
-    results = Array.from(combinedMap.values()).map((p, i) => ({
-      id: i + 1,
-      name: p.name,
-      birth: p.birth, 
-      join: p.join, 
-      leave: p.leave,
-      freezeDate: p.freezeDate,
-      agreement: p.agreement,
-      agreementDate: p.agreementDate,
-      match: 100,
-      rows: p.rows,
-      total: p.totalBatchMoney,
-      totalBatchMoney: p.totalBatchMoney,
-      status: 'found',
-      selected: true
-    }));
+    results = Array.from(combinedMap.values()).map((p, i) => ({
+      id: i + 1,
+      name: p.name,
+      birth: p.birth, 
+      join: p.join, 
+      leave: p.leave,
+      freezeDate: p.freezeDate,
+      agreement: p.agreement,
+      agreementDate: p.agreementDate,
+      match: 100,
+      rows: p.rows,
+      total: p.totalBatchMoney,
+      totalBatchMoney: p.totalBatchMoney,
+      status: 'found',
+      selected: true
+    }));
 
-    document.getElementById('kPeople').textContent = '-';
-    document.getElementById('kMatch').textContent = results.length.toLocaleString();
-    document.getElementById('kMoney').textContent = grandTotalMoney.toLocaleString();
-    document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ທັງໝົດທຸກງວດ (ລວມພົບ ${results.length} ຄົນ)`;
-    
-    render();
-    return; 
-  }
+    document.getElementById('kPeople').textContent = '-';
+    document.getElementById('kMatch').textContent = results.length.toLocaleString();
+    document.getElementById('kMoney').textContent = grandTotalMoney.toLocaleString();
+    document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ທັງໝົດທຸກງວດ (ລວມພົບ ${results.length} ຄົນ)`;
+    
+    render();
+    return; 
+  }
 
-  const data = allHistories.find(x => x.id === selectedId);
-  if(!data) return;
+  const data = allHistories.find(x => x.id === selectedId);
+  if(!data) return;
 
-  results = data.details.map((d, i) => ({
-    id: i + 1,
-    name: d.name,
-    birth: d.birth || '-', 
-    join: d.join || '-', 
-    leave: d.leave || '-',
-    freezeDate: d.freezeDate,
-    agreement: d.agreement,
-    agreementDate: d.agreementDate,
-    match: 100,
-    rows: [{
-      batch: data.batch,
-      year: data.year,
-      months: '',
-      calculatedMultiplier: 1
-    }],
-    total: d.totalFrozen,
-    totalBatchMoney: d.totalFrozen,
-    status: 'found',
-    selected: true
-  }));
-  
-  document.getElementById('kPeople').textContent = '-';
-  document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
-  document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
-  // ເພີ່ມ ປີ data.year ໃສ່ທ້າຍຂໍ້ຄວາມສະຖານະ
-  document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ງວດ ${data.batch} ປີ ${data.year}`;
-  
-  render();
+  results = data.details.map((d, i) => ({
+    id: i + 1,
+    name: d.name,
+    birth: d.birth || '-', 
+    join: d.join || '-', 
+    leave: d.leave || '-',
+    freezeDate: d.freezeDate,
+    agreement: d.agreement,
+    agreementDate: d.agreementDate,
+    match: 100,
+    rows: [{
+      batch: data.batch,
+      year: data.year,
+      months: '',
+      calculatedMultiplier: 1
+    }],
+    total: d.totalFrozen,
+    totalBatchMoney: d.totalFrozen,
+    status: 'found',
+    selected: true
+  }));
+  
+  document.getElementById('kPeople').textContent = '-';
+  document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
+  document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
+  // ເພີ່ມ ປີ data.year ໃສ່ທ້າຍຂໍ້ຄວາມສະຖານະ
+  document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ງວດ ${data.batch} ປີ ${data.year}`;
+  
+  render();
 }
 
 function deleteAllHistory() {
-  if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງ...");
-  document.getElementById('deleteModal').classList.add('active');
+  if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງ...");
+  document.getElementById('deleteModal').classList.add('active');
 }
 
 function closeModal() {
-  document.getElementById('deleteModal').classList.remove('active');
+  document.getElementById('deleteModal').classList.remove('active');
 }
 
 async function confirmDelete() {
-  closeModal(); // ປິດ Popup ລົງ
-  try {
-    const btn = document.querySelector('button[onclick="deleteAllHistory()"]');
-    const originalText = btn.innerHTML;
-    btn.innerHTML = '⏳ ກຳລັງລຶບ...';
-    btn.disabled = true;
+  closeModal(); // ປິດ Popup ລົງ
+  try {
+    const btn = document.querySelector('button[onclick="deleteAllHistory()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ ກຳລັງລຶບ...';
+    btn.disabled = true;
 
-    // ດຶງຂໍ້ມູນທັງໝົດໃນ Collection ມາ
-    const q = window.query(window.collection(window.db, "audit_records"));
-    const snap = await window.getDocs(q);
-    
-    // ວົນລູບລຶບທຸກໆ Record
-    const deletePromises = [];
-    snap.forEach(documentSnapshot => {
-      deletePromises.push(window.deleteDoc(window.doc(window.db, "audit_records", documentSnapshot.id)));
-    });
+    // ດຶງຂໍ້ມູນທັງໝົດໃນ Collection ມາ
+    const q = window.query(window.collection(window.db, "audit_records"));
+    const snap = await window.getDocs(q);
+    
+    // ວົນລູບລຶບທຸກໆ Record
+    const deletePromises = [];
+    snap.forEach(documentSnapshot => {
+      deletePromises.push(window.deleteDoc(window.doc(window.db, "audit_records", documentSnapshot.id)));
+    });
 
-    await Promise.all(deletePromises);
-    
-    // ແຈ້ງເຕືອນສຳເລັດທີ່ປຸ່ມແທນການໃຊ້ alert ຕາມທີ່ຮຽກຮ້ອງ
-    btn.innerHTML = '✅ ລຶບສຳເລັດແລ້ວ!';
-    setTimeout(() => {
-      btn.innerHTML = originalText;
-      btn.disabled = false;
-    }, 2500);
-    
-    // === ເພີ່ມການລ້າງຄ່າໃນໜ້າຈໍ ===
-   allHistories = [];
-   groupedHistories = {};
-   results = []; // ລ້າງຂໍ້ມູນໃນຕາຕະລາງ
-   document.getElementById('auditTitleSelect').innerHTML = '<option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>';
-   document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
-    
-    // ລ້າງຄ່າສະຖິຕິ KPIs (ບັອກຕົວເລກ)
-    document.getElementById('kPeople').textContent = '0';
-    document.getElementById('kMatch').textContent = '0';
-    document.getElementById('kPaid').textContent = '0';
-    document.getElementById('kMoney').textContent = '0';
-    
-    // ຣີເຊັດຂໍ້ຄວາມສະຖານະ
-    document.getElementById('status').textContent = 'ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.';
-    
-    // ອັບເດດຕາຕະລາງໃຫ້ເປົ່າຫວ່າງ
-    render();
-    
-  } catch (e) {
-    console.error("ເກີດຂໍ້ຜິດພາດ: ", e);
-    alert("ເກີດຂໍ້ຜິດພາດໃນການລຶບຂໍ້ມູນ: " + e.message);
-    document.querySelector('button[onclick="deleteAllHistory()"]').disabled = false;
-  }
+    await Promise.all(deletePromises);
+    
+    // ແຈ້ງເຕືອນສຳເລັດທີ່ປຸ່ມແທນການໃຊ້ alert ຕາມທີ່ຮຽກຮ້ອງ
+    btn.innerHTML = '✅ ລຶບສຳເລັດແລ້ວ!';
+    setTimeout(() => {
+      btn.innerHTML = originalText;
+      btn.disabled = false;
+    }, 2500);
+    
+    // === ເພີ່ມການລ້າງຄ່າໃນໜ້າຈໍ ===
+   allHistories = [];
+   groupedHistories = {};
+   results = []; // ລ້າງຂໍ້ມູນໃນຕາຕະລາງ
+   document.getElementById('auditTitleSelect').innerHTML = '<option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>';
+   document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
+    
+    // ລ້າງຄ່າສະຖິຕິ KPIs (ບັອກຕົວເລກ)
+    document.getElementById('kPeople').textContent = '0';
+    document.getElementById('kMatch').textContent = '0';
+    document.getElementById('kPaid').textContent = '0';
+    document.getElementById('kMoney').textContent = '0';
+    
+    // ຣີເຊັດຂໍ້ຄວາມສະຖານະ
+    document.getElementById('status').textContent = 'ກະລຸນາເລືອກໄຟລ໌ທັງ 2 ກ່ອນ.';
+    
+    // ອັບເດດຕາຕະລາງໃຫ້ເປົ່າຫວ່າງ
+    render();
+    
+  } catch (e) {
+    console.error("ເກີດຂໍ້ຜິດພາດ: ", e);
+    alert("ເກີດຂໍ້ຜິດພາດໃນການລຶບຂໍ້ມູນ: " + e.message);
+    document.querySelector('button[onclick="deleteAllHistory()"]').disabled = false;
+  }
 }
 </script>
 </body>
