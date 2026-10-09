@@ -41,6 +41,15 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
 .modal-actions {display:flex;gap:10px;justify-content:center}
 .modal-actions button {flex:1;padding:12px;font-size:14px}
 
+/* Login & Admin Panel Styles */
+#loginScreen {position:fixed;top:0;left:0;right:0;bottom:0;background:#f4f7fb;z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:all 0.3s;}
+.login-box {background:#fff;padding:32px;border-radius:16px;box-shadow:0 10px 25px rgba(0,0,0,0.1);width:90%;max-width:380px;text-align:center;}
+.login-box input {width:100%;margin-bottom:16px;padding:12px;border-radius:8px;border:1px solid #cbd5e1;font-size:15px;font-family:inherit;}
+.login-box h2 {color:#0f766e;margin-top:0;margin-bottom:20px;}
+.hidden {display:none !important;}
+#adminPanel {border:2px solid #0f766e; background:#f0fdfa;}
+#usersTable th {background:#ccfbf1; color:#0f766e;}
+
 </style>
 
 <script type="module">
@@ -74,12 +83,51 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
 
 </head>
 <body>
-<header>
-  <h1>📊 ລະບົບສັງລວມເງິນອາຍັດຕາມຂໍ້ຕົກລົງ</h1>
-  <p>ກວດຈັບບຸກຄົນຈາກໄຟລ໌ປະລະ → ກວດຂໍ້ມູນເງິນເດືອນຫຼາຍງວດ → ສະແດງງວດທີ່ມີການຈ່າຍ ແລະ ງວດທີ່ບໍ່ພົບ</p>
+<header style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+  <div>
+    <h1>📊 ລະບົບສັງລວມເງິນອາຍັດຕາມຂໍ້ຕົກລົງ</h1>
+    <p>ກວດຈັບບຸກຄົນຈາກໄຟລ໌ປະລະ → ກວດຂໍ້ມູນເງິນເດືອນຫຼາຍງວດ → ສະແດງງວດທີ່ມີການຈ່າຍ ແລະ ງວດທີ່ບໍ່ພົບ</p>
+  </div>
+  <div style="background:rgba(255,255,255,0.2); padding:10px 15px; border-radius:10px; display:flex; align-items:center; gap:12px;">
+    <span id="currentUserDisp" style="font-weight:bold; font-size:14px;">👤 ກຳລັງໂຫຼດ...</span>
+    <button class="danger" style="padding:6px 12px; font-size:12px;" onclick="logout()">ອອກລະບົບ</button>
+  </div>
 </header>
 
-<div class="wrap">
+<!-- ໜ້າຕ່າງ Login -->
+<div id="loginScreen">
+  <div class="login-box">
+    <h2>🔐 ເຂົ້າສູ່ລະບົບ</h2>
+    <input type="text" id="loginUser" placeholder="ຊື່ຜູ້ໃຊ້ (Username)">
+    <input type="password" id="loginPass" placeholder="ລະຫັດຜ່ານ (Password)" onkeypress="if(event.key==='Enter') handleLogin()">
+    <button id="loginBtn" class="primary" style="width:100%; font-size:16px; padding:12px;" onclick="handleLogin()">ເຂົ້າສູ່ລະບົບ</button>
+  </div>
+</div>
+
+<div class="wrap" id="mainWrap" style="display:none;">
+
+  <!-- ແຜງຄວບຄຸມ Admin (ຈະສະແດງສະເພາະ Admin) -->
+  <div id="adminPanel" class="card hidden" style="margin-bottom: 16px;">
+    <h2>👑 ແຜງຄວບຄຸມສຳລັບ Admin (ຈັດການຜູ້ໃຊ້)</h2>
+    <div class="controls">
+      <div class="field"><label>ຊື່ຜູ້ໃຊ້ໃໝ່</label><input type="text" id="newUsername" placeholder="Username"></div>
+      <div class="field"><label>ລະຫັດຜ່ານ</label><input type="text" id="newPassword" placeholder="Password"></div>
+      <div class="field"><label>ສິດການໃຊ້ງານ</label>
+        <select id="newRole">
+          <option value="user">ຜູ້ໃຊ້ທົ່ວໄປ (User)</option>
+          <option value="admin">ແອັດມິນ (Admin)</option>
+        </select>
+      </div>
+      <button class="primary" onclick="createUser()">+ ສ້າງຜູ້ໃຊ້</button>
+      <button class="secondary" onclick="loadUsers()">🔄 ໂຫຼດລາຍຊື່ໃໝ່</button>
+    </div>
+    <div class="table-wrap" style="max-height: 250px; margin-top: 15px;">
+      <table id="usersTable">
+        <thead><tr><th>ລ/ດ</th><th>ຊື່ຜູ້ໃຊ້</th><th>ລະຫັດຜ່ານ</th><th>ສິດ (Role)</th><th>ຈັດການ</th></tr></thead>
+        <tbody><tr><td colspan="5" class="muted" style="text-align:center;">ກຳລັງໂຫຼດ...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
  <div class="grid">
   <div class="card">
     <h2>1. ໄຟລ໌ຂໍ້ມູນປະລະຕາມຂໍ້ຕົກລົງ</h2>
@@ -200,7 +248,179 @@ window.alert = function(message) {
 function closeAlertModal() {
   document.getElementById('alertModal').classList.remove('active');
 }
+// ==========================================
+// ລະບົບ Authentication ແລະ ຈັດການ User
+// ==========================================
+let currentUser = null;
 
+// ກວດສອບ Session ເມື່ອໂຫຼດໜ້າເວັບ
+document.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('sessionUser');
+  if(saved) {
+    setCurrentUser(JSON.parse(saved));
+  }
+});
+
+async function handleLogin() {
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value.trim();
+  if(!u || !p) return alert("⚠️ ກະລຸນາປ້ອນຊື່ຜູ້ໃຊ້ ແລະ ລະຫັດຜ່ານໃຫ້ຄົບຖ້ວນ");
+
+  const btn = document.getElementById('loginBtn');
+  if(btn) {
+    btn.innerHTML = '⏳ ກຳລັງກວດສອບ...';
+    btn.disabled = true;
+  }
+
+  // 1. ກວດສອບ Master Admin Account (ບໍ່ຈຳກັດຕົວພິມນ້ອຍ/ໃຫຍ່)
+  if(u.toUpperCase() === 'XBL-ABANDON' && p === '@160800') {
+    setCurrentUser({ username: 'XBL-ABANDON', role: 'admin', isMaster: true });
+    if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+    return;
+  }
+
+  // 2. ກວດສອບ User ຈາກ Firestore
+  try {
+    if(!window.db) throw new Error("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງແລ້ວກົດໃໝ່ (ຫຼືອິນເຕີເນັດມີບັນຫາ)");
+    const q = window.query(window.collection(window.db, "app_users"));
+    const snap = await window.getDocs(q);
+    
+    let foundUser = null;
+    snap.forEach(doc => {
+      const data = doc.data();
+      if(data.username === u && data.password === p) {
+        foundUser = { id: doc.id, ...data };
+      }
+    });
+
+    if(foundUser) {
+      setCurrentUser(foundUser);
+      if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+    } else {
+      alert("❌ ຊື່ຜູ້ໃຊ້ ຫຼື ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ!");
+      if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+    }
+  } catch(e) {
+    alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    if(btn) { btn.innerHTML = 'ເຂົ້າສູ່ລະບົບ'; btn.disabled = false; }
+  }
+}
+
+function setCurrentUser(user) {
+  currentUser = user;
+  try {
+    localStorage.setItem('sessionUser', JSON.stringify(user));
+  } catch(e) {
+    console.warn("ບຼາວເຊີຂອງທ່ານອາດຖືກບລັອກການບັນທຶກ Session");
+  }
+  
+  // ປ່ຽນ UI ໃຫ້ໜ້າ Login ຫາຍໄປ ແລະ ເປີດໜ້າຫຼັກ
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('mainWrap').style.display = 'block';
+  document.getElementById('currentUserDisp').innerHTML = `👤 ${user.username} <span style="font-size:11px; background:#fff; color:#000; padding:2px 5px; border-radius:4px; margin-left:5px;">${user.role.toUpperCase()}</span>`;
+  
+  // ສະແດງ Admin Panel ຖ້າເປັນ Admin
+  if(user.role === 'admin') {
+    document.getElementById('adminPanel').classList.remove('hidden');
+    loadUsers();
+  }
+}
+
+function logout() {
+  localStorage.removeItem('sessionUser');
+  location.reload();
+}
+
+async function loadUsers() {
+  if(currentUser?.role !== 'admin') return;
+  try {
+    const snap = await window.getDocs(window.collection(window.db, "app_users"));
+    const tb = document.querySelector('#usersTable tbody');
+    let html = '';
+    let i = 1;
+    
+    // ສະແດງ Master Admin ກ່ອນ
+    html += `<tr style="background:#fef3c7;">
+      <td>-</td>
+      <td><b>XBL-ABANDON</b></td>
+      <td><span class="muted">***(ປິດບັງ)***</span></td>
+      <td>👑 Master Admin</td>
+      <td><span class="muted">ລຶບບໍ່ໄດ້</span></td>
+    </tr>`;
+
+    snap.forEach(doc => {
+      const d = doc.data();
+      html += `<tr>
+        <td>${i++}</td>
+        <td><b>${d.username}</b></td>
+        <td>${d.password}</td>
+        <td>${d.role === 'admin' ? '👑 ແອັດມິນ' : '👤 ທົ່ວໄປ'}</td>
+        <td><button class="danger" style="padding: 4px 8px; font-size: 11px;" onclick="deleteUser('${doc.id}', '${d.username}')">ລຶບ</button></td>
+      </tr>`;
+    });
+    
+    tb.innerHTML = html;
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+async function createUser() {
+  if(currentUser?.role !== 'admin') return;
+  const u = document.getElementById('newUsername').value.trim();
+  const p = document.getElementById('newPassword').value.trim();
+  const r = document.getElementById('newRole').value;
+  
+  if(!u || !p) return alert("⚠️ ກະລຸນາປ້ອນຊື່ ແລະ ລະຫັດຜ່ານຂອງຜູ້ໃຊ້ໃໝ່");
+  if(u === 'XBL-ABANDON') return alert("❌ ບໍ່ສາມາດໃຊ້ຊື່ນີ້ໄດ້ (ສະຫງວນໄວ້ສຳລັບລະບົບ)");
+
+  try {
+    const btn = document.querySelector('button[onclick="createUser()"]');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ ກຳລັງສ້າງ...';
+    btn.disabled = true;
+
+    // ກວດສອບຊື່ຊ້ຳກັນ
+    const snap = await window.getDocs(window.collection(window.db, "app_users"));
+    let isDuplicate = false;
+    snap.forEach(doc => { if(doc.data().username === u) isDuplicate = true; });
+    
+    if(isDuplicate) {
+      alert("❌ ຊື່ຜູ້ໃຊ້ນີ້ມີໃນລະບົບແລ້ວ ກະລຸນາປ່ຽນຊື່ໃໝ່!");
+      btn.innerHTML = originalText; btn.disabled = false;
+      return;
+    }
+
+    // ບັນທຶກລົງຖານຂໍ້ມູນ
+    await window.addDoc(window.collection(window.db, "app_users"), {
+      username: u, password: p, role: r, created_at: new Date().toISOString()
+    });
+
+    document.getElementById('newUsername').value = '';
+    document.getElementById('newPassword').value = '';
+    btn.innerHTML = '✅ ສຳເລັດ!';
+    
+    setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+    loadUsers();
+    
+  } catch(e) {
+    alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    document.querySelector('button[onclick="createUser()"]').disabled = false;
+  }
+}
+
+async function deleteUser(id, username) {
+  if(currentUser?.role !== 'admin') return;
+  if(window.confirm(`⚠️ ຢືນຢັນການລຶບຜູ້ໃຊ້ "${username}" ອອກຈາກລະບົບແທ້ບໍ່?`)) {
+    try {
+      await window.deleteDoc(window.doc(window.db, "app_users", id));
+      loadUsers();
+    } catch(e) {
+      alert("❌ ເກີດຂໍ້ຜິດພາດ: " + e.message);
+    }
+  }
+}
+// ==========================================
 let firstPeople=[], salaryRows=[], results=[], lastCSV=[];
 
 const prefixRe=/^(ທ້າວ|ທ|ທີ່|ນາງສາວ|ນາງ|ອຈ|ອ ຈ|ດຣ|ສ ຈ|ພັນຕີ|ຮສ|ຜສ|ຮ ອ|ຮອ)[\s]+/i;
