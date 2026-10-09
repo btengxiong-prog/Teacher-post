@@ -691,16 +691,18 @@ async function saveToFirebase() {
   const auditTitle = document.getElementById('auditTitle').value.trim() || `ປະຈຳປີ ${manualYear}`; 
   const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
+  // === ອັບເດດໃຫ້ດຶງເອົາວັນທີ ວັນເກີດ, ສັງກັດລັດ, ປະລະ ລົງໄປພ້ອມ ===
   const matchedDetails = arr.map(x => ({
-   id: x.id,
-   name: x.name,
-   birth: x.birth || '-',
-   join: x.join || '-',
-   leave: x.leave || '-',
-   agreement: x.agreement || '-',
-   freezeDate: x.freezeDate || '-',
-   totalFrozen: x.totalBatchMoney
- }));
+    id: x.id,
+    name: x.name,
+    birth: x.birth || '-',
+    join: x.join || '-',
+    leave: x.leave || '-',
+    agreement: x.agreement || '-',
+    agreementDate: x.agreementDate || '-',
+    freezeDate: x.freezeDate || '-',
+    totalFrozen: x.totalBatchMoney
+  }));
 
   const payload = {
     auditTitle: auditTitle,
@@ -718,7 +720,6 @@ async function saveToFirebase() {
     btn.innerHTML = '⏳ ກຳລັງບັນທຶກ...';
     btn.disabled = true;
 
-    // ສ້າງ ID ສະເພາະຕົວ (ເຊັ່ນ: 2026_batch_1) ເພື່ອໃຫ້ບັນທຶກທັບຂໍ້ມູນເກົ່າແທນການສ້າງ Record ໃໝ່ເລື້ອຍໆ
     const customId = `${manualYear}_batch_${manualBatch}`;
     await window.setDoc(window.doc(window.db, "audit_records", customId), payload);
     
@@ -803,20 +804,31 @@ function loadSelectedHistory() {
     let grandTotalMoney = 0;
 
     allHistories.forEach(history => {
+      if(!history.details) return; // ກັນ Error ຖ້າບໍ່ມີ details
       history.details.forEach(d => {
         let key = normName(d.name); 
-       if(!combinedMap.has(key)) {
-         combinedMap.set(key, {
-           name: d.name,
-           birth: d.birth || '-',
-           join: d.join || '-',
-           leave: d.leave || '-',
-           freezeDate: d.freezeDate,
-           agreement: d.agreement,
-           totalBatchMoney: 0,
-           rows: []
-         });
-       }
+        
+        // --- ຖ້າຍັງບໍ່ມີຄົນນີ້ໃນ Map, ໃຫ້ເພີ່ມເຂົ້າໄປ ---
+        if(!combinedMap.has(key)) {
+          combinedMap.set(key, {
+            name: d.name,
+            birth: (d.birth && d.birth !== '-') ? d.birth : '-',
+            join: (d.join && d.join !== '-') ? d.join : '-',
+            leave: (d.leave && d.leave !== '-') ? d.leave : '-',
+            freezeDate: d.freezeDate,
+            agreement: d.agreement,
+            agreementDate: d.agreementDate,
+            totalBatchMoney: 0,
+            rows: []
+          });
+        } else {
+          // --- ຖ້າມີແລ້ວ ແຕ່ບາງງວດອາດຈະບໍ່ມີວັນທີ (ເປັນ '-') ໃຫ້ດຶງຈາກງວດທີ່ມີວັນທີມາໃສ່ແທນ ---
+          let existing = combinedMap.get(key);
+          if (existing.birth === '-' && d.birth && d.birth !== '-') existing.birth = d.birth;
+          if (existing.join === '-' && d.join && d.join !== '-') existing.join = d.join;
+          if (existing.leave === '-' && d.leave && d.leave !== '-') existing.leave = d.leave;
+        }
+        
         let person = combinedMap.get(key);
         person.totalBatchMoney += d.totalFrozen; 
         person.rows.push({
@@ -832,9 +844,12 @@ function loadSelectedHistory() {
     results = Array.from(combinedMap.values()).map((p, i) => ({
       id: i + 1,
       name: p.name,
-      birth: p.birth, join: p.join, leave: p.leave,
+      birth: p.birth, 
+      join: p.join, 
+      leave: p.leave,
       freezeDate: p.freezeDate,
       agreement: p.agreement,
+      agreementDate: p.agreementDate,
       match: 100,
       rows: p.rows,
       total: p.totalBatchMoney,
@@ -852,18 +867,20 @@ function loadSelectedHistory() {
     return; 
   }
 
+  // --- ສຳລັບການໂຫຼດປະຫວັດງວດດຽວ ---
   const data = allHistories.find(x => x.id === selectedId);
   if(!data) return;
 
   results = data.details.map((d, i) => ({
-   id: i + 1,
-   name: d.name,
-   birth: d.birth || '-', 
-   join: d.join || '-', 
-   leave: d.leave || '-',
-   freezeDate: d.freezeDate,
-   agreement: d.agreement,
-   match: 100,
+    id: i + 1,
+    name: d.name,
+    birth: d.birth || '-', 
+    join: d.join || '-', 
+    leave: d.leave || '-',
+    freezeDate: d.freezeDate,
+    agreement: d.agreement,
+    agreementDate: d.agreementDate,
+    match: 100,
     rows: [{
       batch: data.batch,
       year: data.year,
@@ -883,6 +900,7 @@ function loadSelectedHistory() {
   
   render();
 }
+
 function deleteAllHistory() {
   if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າບຶດໜຶ່ງ...");
   document.getElementById('deleteModal').classList.add('active');
