@@ -701,29 +701,78 @@ function render(){
  let arr=results.filter(x=>(!q||normName(x.name).includes(q)) && (f==='all'||(f==='found'&&x.status==='found')||(f==='empty'&&x.status==='empty')));
  const tb=document.querySelector('#resultTable tbody');
  if(!arr.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:25px">ບໍ່ພົບຂໍ້ມູນ</td></tr>';return}
- tb.innerHTML=arr.map(x=>{
-   const periods=x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
-   const selected=`<input type="checkbox" ${x.rows.length?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
-   return `<tr>
-    <td>${x.id}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
-    <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
-    <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
-   </tr>`
- }).join('');
+ 
+ // ຈັດກຸ່ມຂໍ້ມູນຕາມເມືອງ
+ const groups = {};
+ let grandTotal = 0;
+ let grandTotalBatch = 0;
+
+ arr.forEach(x => {
+    const d = x.district || 'ບໍ່ລະບຸເມືອງ';
+    if(!groups[d]) groups[d] = [];
+    groups[d].push(x);
+    
+    // ບວກຍອດລວມທັງໝົດທຸກຄົນ
+    grandTotal += x.total || 0;
+    grandTotalBatch += x.totalBatchMoney || 0;
+ });
+
+ let html = '';
+ Object.keys(groups).forEach(d => {
+    
+    // 1. ຄິດໄລ່ຍອດລວມຂອງເມືອງນີ້
+    let sumTotal = 0;
+    let sumTotalBatch = 0;
+    groups[d].forEach(x => {
+        sumTotal += x.total || 0;
+        sumTotalBatch += x.totalBatchMoney || 0;
+    });
+
+    // 2. ແຖວຫົວຂໍ້ຂັ້ນກາງສຳລັບແຕ່ລະເມືອງ
+    html += `<tr style="background:#e0f2fe; color:#0369a1; font-size:14px; font-weight:bold;">
+      <td colspan="9" style="padding:10px;">📍 ເມືອງ: ${escapeHtml(d)} (ລວມ ${groups[d].length} ຄົນ)</td>
+      <td class="money"><u>${money(sumTotal)}</u></td>
+      <td class="money" style="color:#0f766e;"><u>${money(sumTotalBatch)}</u></td>
+      <td></td>
+    </tr>`;
+    
+    // 3. ແຖວຂໍ້ມູນບຸກຄົນໃນເມືອງນັ້ນໆ
+    groups[d].forEach(x => {
+       const periods=x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
+       const selected=`<input type="checkbox" ${x.rows.length?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
+       html += `<tr>
+        <td>${x.id}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
+        <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
+        <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
+       </tr>`
+    });
+ });
+ 
+ // ເພີ່ມແຖວລວມທັງໝົດລຸ່ມສຸດ 
+ html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
+   <td colspan="9" style="padding:12px; text-align:right;">ລວມທັງໝົດ (ທຸກເມືອງ):</td>
+   <td class="money">${money(grandTotal)}</td>
+   <td class="money" style="color:#ccfbf1;">${money(grandTotalBatch)}</td>
+   <td></td>
+ </tr>`;
+
+ tb.innerHTML = html;
 }
 
 function toggleSelect(id,on){const x=results.find(a=>a.id===id);if(x)x.selected=on}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
 function downloadCSV(){
  const arr=results.filter(x=>x.selected!==false);
  if(!arr.length){alert('ບໍ່ມີລາຍການໃຫ້ Export');return}
- let rows=[['ລ/ດ','ຊື່','ວັນເກີດ','ວັນສັງກັດລັດ','ວັນປະລະ','ວັນອາຍັດ','ເລກທີ່ຂໍ້ຕົກລົງ','Match %','ງວດ','ປີ','ເດືອນ','ຕົວຄູນ (ເດືອນ)','ເງິນອາຍັດ/ພົບ (ເດືອນ)', 'ລວມເງິນ/ງວດ']];
+ let rows=[['ລ/ດ','ເມືອງ','ຊື່','ວັນເກີດ','ວັນສັງກັດລັດ','ວັນປະລະ','ວັນອາຍັດ','ເລກທີ່ຂໍ້ຕົກລົງ','Match %','ງວດ','ປີ','ເດືອນ','ຕົວຄູນ (ເດືອນ)','ເງິນອາຍັດ/ພົບ (ເດືອນ)', 'ລວມເງິນ/ງວດ']];
  arr.forEach(x=>{
-   if(!x.rows.length) rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),'','','',0,0,0]);
+   const d = x.district || 'ບໍ່ລະບຸເມືອງ';
+   if(!x.rows.length) rows.push([x.id,d,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),'','','',0,0,0]);
    else x.rows.forEach(r=>{
      const moneyFound = r.actual||r.received||r.totalBefore8||0;
      const mult = r.calculatedMultiplier || 0;
-     rows.push([x.id,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),r.batch,r.year,r.months,mult,moneyFound, moneyFound * mult]);
+     rows.push([x.id,d,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),r.batch,r.year,r.months,mult,moneyFound, moneyFound * mult]);
    });
  });
  const ws=XLSX.utils.aoa_to_sheet(rows), wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'ສັງລວມ');
@@ -748,16 +797,17 @@ async function saveToFirebase() {
   const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
   const matchedDetails = arr.map(x => ({
-    id: x.id,
-    name: x.name,
-    birth: x.birth || '-',
-    join: x.join || '-',
-    leave: x.leave || '-',
-    agreement: x.agreement || '-',
-    agreementDate: x.agreementDate || '-',
-    freezeDate: x.freezeDate || '-',
-    totalFrozen: x.totalBatchMoney
-  }));
+   id: x.id,
+   name: x.name,
+   birth: x.birth || '-',
+   join: x.join || '-',
+   leave: x.leave || '-',
+   agreement: x.agreement || '-',
+   agreementDate: x.agreementDate || '-',
+   freezeDate: x.freezeDate || '-',
+   district: x.district || '-',
+   totalFrozen: x.totalBatchMoney
+ }));
 
   const payload = {
     auditTitle: auditTitle,
@@ -895,16 +945,17 @@ function loadSelectedHistory() {
         let key = normName(d.name); 
         
         if(!combinedMap.has(key)) {
-          combinedMap.set(key, {
-            name: d.name,
-            birth: (d.birth && d.birth !== '-') ? d.birth : '-',
-            join: (d.join && d.join !== '-') ? d.join : '-',
-            leave: (d.leave && d.leave !== '-') ? d.leave : '-',
-            freezeDate: d.freezeDate,
-            agreement: d.agreement,
-            agreementDate: d.agreementDate,
-            totalBatchMoney: 0,
-            rows: []
+            combinedMap.set(key, {
+              name: d.name,
+              birth: (d.birth && d.birth !== '-') ? d.birth : '-',
+              join: (d.join && d.join !== '-') ? d.join : '-',
+              leave: (d.leave && d.leave !== '-') ? d.leave : '-',
+              district: (d.district && d.district !== '-') ? d.district : '-',
+              freezeDate: d.freezeDate,
+              agreement: d.agreement,
+              agreementDate: d.agreementDate,
+              totalBatchMoney: 0,
+              rows: []
           });
         } else {
           let existing = combinedMap.get(key);
@@ -931,6 +982,7 @@ function loadSelectedHistory() {
       birth: p.birth, 
       join: p.join, 
       leave: p.leave,
+      district: p.district,
       freezeDate: p.freezeDate,
       agreement: p.agreement,
       agreementDate: p.agreementDate,
@@ -960,6 +1012,7 @@ function loadSelectedHistory() {
     birth: d.birth || '-', 
     join: d.join || '-', 
     leave: d.leave || '-',
+    district: d.district || '-',
     freezeDate: d.freezeDate,
     agreement: d.agreement,
     agreementDate: d.agreementDate,
