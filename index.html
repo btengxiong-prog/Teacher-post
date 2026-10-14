@@ -234,7 +234,10 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
         <div style="padding: 18px 18px 10px 18px; background: #fff; z-index: 10;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h2 style="margin: 0;">4. ຜົນການກວດສອບ</h2>
-            <button class="danger" style="padding: 8px 16px; font-size: 13px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດ</button>
+            <div style="display: flex; gap: 8px;">
+              <button class="secondary" style="padding: 8px 16px; font-size: 13px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
+              <button class="danger" style="padding: 8px 16px; font-size: 13px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດ</button>
+            </div>
           </div>
           <div class="controls">
             <div class="field"><label>ຄົ້ນຫາຊື່</label><input id="search" type="text" placeholder="ພິມຊື່..." oninput="render()"></div>
@@ -251,7 +254,6 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
                 <option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>
               </select>
             </div>
-            <button class="secondary" style="margin-bottom: 2px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
             <button class="primary" style="margin-bottom: 2px;" onclick="loadSelectedHistory()">👁️ ເບິ່ງຂໍ້ມູນ</button>
           </div>
         </div>
