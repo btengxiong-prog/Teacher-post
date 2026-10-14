@@ -109,8 +109,18 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
     <p>ກວດຈັບບຸກຄົນຈາກໄຟລ໌ປະລະ → ກວດຂໍ້ມູນເງິນເດືອນຫຼາຍງວດ → ສະແດງງວດທີ່ມີການຈ່າຍ ແລະ ງວດທີ່ບໍ່ພົບ</p>
   </div>
   <div style="background:rgba(255,255,255,0.2); padding:10px 15px; border-radius:10px; display:flex; align-items:center; gap:12px;">
+    
+    <!-- ເມນູແອັດມິນແບບ Dropdown (ເຊື່ອງໄວ້ກ່ອນ, ສະແດງສະເພາະ Admin) -->
+    <div id="adminMenuContainer" class="hidden" style="position: relative;">
+      <button class="secondary" style="padding:6px 12px; font-size:13px; display:flex; align-items:center; gap:5px; margin:0;" onclick="toggleAdminMenu()">⚙️ ເມນູແອັດມິນ <span>▼</span></button>
+      <div id="adminDropdown" style="display:none; position:absolute; top:100%; right:0; background:#fff; border:1px solid #e3e8ef; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); margin-top:8px; min-width:160px; overflow:hidden; z-index:1000;">
+        <div style="padding:10px 15px; border-bottom:1px solid #f1f5f9; cursor:pointer; color:#172033; font-size:13px;" onclick="switchView('dashboard')" onmouseover="this.style.background='#f8fbfc'" onmouseout="this.style.background='#fff'">👁️ ເບິ່ງຂໍ້ມູນຜູ້ໃຊ້</div>
+        <div style="padding:10px 15px; cursor:pointer; color:#172033; font-size:13px;" onclick="switchView('admin')" onmouseover="this.style.background='#f8fbfc'" onmouseout="this.style.background='#fff'">👑 ຈັດການຜູ້ໃຊ້</div>
+      </div>
+    </div>
+
     <span id="currentUserDisp" style="font-weight:bold; font-size:14px;">👤 ກຳລັງໂຫຼດ...</span>
-    <button class="danger" style="padding:6px 12px; font-size:12px;" onclick="logout()">ອອກລະບົບ</button>
+    <button class="danger" style="padding:6px 12px; font-size:12px; margin:0;" onclick="logout()">ອອກລະບົບ</button>
   </div>
 </header>
 
@@ -206,8 +216,8 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
         </div>
       </div>
 
-      <!-- KPIs ສະຖິຕິ -->
-      <div class="kpis" style="margin-top:0;">
+      <!-- KPIs ສະຖິຕິ (ເຊື່ອງໄວ້ແລ້ວ) -->
+      <div class="kpis" style="display:none; margin-top:0;">
         <div class="kpi"><b id="kPeople">0</b><span>ຄົນໃນໄຟລ໌ປະລະ</span></div>
         <div class="kpi"><b id="kMatch">0</b><span>ຄົນທີ່ພົບໃນເງິນເດືອນ</span></div>
         <div class="kpi"><b id="kPaid">0</b><span>ລາຍການງວດທີ່ພົບການຈ່າຍ</span></div>
@@ -298,6 +308,34 @@ window.alert = function(message) {
   modal.classList.add('active');
 };
 
+// ==========================================
+// ລະບົບເມນູ Dropdown ສຳລັບ Admin
+// ==========================================
+function toggleAdminMenu() {
+  const dropdown = document.getElementById('adminDropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// ກົດບ່ອນອື່ນໃນໜ້າຈໍແລ້ວໃຫ້ Dropdown ປິດອັດຕະໂນມັດ
+document.addEventListener('click', function(e) {
+  const container = document.getElementById('adminMenuContainer');
+  if (container && !container.contains(e.target)) {
+    document.getElementById('adminDropdown').style.display = 'none';
+  }
+});
+
+// ຟັງຊັນສະຫຼັບໜ້າຈໍລະຫວ່າງ "ຕາຕະລາງປົກກະຕິ" ແລະ "ແຜງຈັດການແອັດມິນ"
+function switchView(view) {
+  const adminPanel = document.getElementById('adminPanel');
+  document.getElementById('adminDropdown').style.display = 'none'; // ປິດເມນູ Dropdown
+  
+  if (view === 'admin') {
+    adminPanel.classList.remove('hidden'); // ສະແດງແຜງຈັດການ
+  } else {
+    adminPanel.classList.add('hidden'); // ເຊື່ອງແຜງຈັດການ (ເບິ່ງຂໍ້ມູນປົກກະຕິ)
+  }
+}
+
 function closeAlertModal() {
   document.getElementById('alertModal').classList.remove('active');
 }
@@ -372,9 +410,9 @@ function setCurrentUser(user) {
   document.getElementById('mainWrap').style.display = 'block';
   document.getElementById('currentUserDisp').innerHTML = `👤 ${user.username} <span style="font-size:11px; background:#fff; color:#000; padding:2px 5px; border-radius:4px; margin-left:5px;">${user.role.toUpperCase()}</span>`;
   
-  // ສະແດງ Admin Panel ຖ້າເປັນ Admin
+  // ຖ້າເປັນ Admin ໃຫ້ເປີດປຸ່ມເມນູ Dropdown (ແຕ່ຍັງບໍ່ທັນສະແດງແຜງຈັດການ)
   if(user.role === 'admin') {
-    document.getElementById('adminPanel').classList.remove('hidden');
+    document.getElementById('adminMenuContainer').classList.remove('hidden');
     loadUsers();
   }
 }
