@@ -737,11 +737,13 @@ function render(){
     </tr>`;
     
     // 3. ແຖວຂໍ້ມູນບຸກຄົນໃນເມືອງນັ້ນໆ
+    let index = 1; // ເພີ່ມຕົວນັບໃໝ່ເລີ່ມຈາກ 1 ໃຫ້ແຕ່ລະເມືອງ
+    
     groups[d].forEach(x => {
        const periods=x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
        const selected=`<input type="checkbox" ${x.rows.length?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
        html += `<tr>
-        <td>${x.id}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
+        <td>${index++}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
         <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
         <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
        </tr>`
