@@ -25,7 +25,11 @@ button{border:0;border-radius:9px;padding:10px 16px;font-family:inherit;font-wei
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
 .kpi{background:#fff;border:1px solid #e3e8ef;border-radius:12px;padding:14px}.kpi b{font-size:23px;display:block}.kpi span{font-size:12px;color:#667085}
 .table-wrap{overflow:auto;max-height:650px;margin-top:14px;border:1px solid #e5e7eb;border-radius:10px}
-table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{border-bottom:1px solid #edf0f4;padding:8px 9px;white-space:nowrap}th{position:sticky;top:0;background:#eef5f7;z-index:1;text-align:left}tr:hover td{background:#f8fbfc}
+table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}
+th,td{border:1px solid #cbd5e1;padding:8px 9px;white-space:nowrap} /* ເພີ່ມຂອບທຸກດ້ານ */
+th{position:sticky;top:0;background:#eef5f7;z-index:1;text-align:center; border-bottom:2px solid #94a3b8;}
+tr:hover td{background:#f8fbfc}
+#resultTable th, #resultTable td { border: 1px solid #94a3b8; } /* ເນັ້ນເສັ້ນຕາຕະລາງສະແດງຜົນໃຫ້ໜາ ແລະ ຈະແຈ້ງທີ່ສຸດ */
 .badge{padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.no{background:#fee2e2;color:#991b1b}
 .money{text-align:right;font-variant-numeric:tabular-nums}.right{text-align:right}.muted{color:#98a2b3}
 /* Dashboard Layout ໃໝ່ ແບ່ງຊ້າຍ-ຂວາ */
@@ -430,120 +434,164 @@ function downloadActualReport() {
   XLSX.writeFile(wb, 'ລາຍງານ_ຜົນຕົວຈິງ.xlsx');
 }
 
-// ==========================================
-// 2. ຟັງຊັນສຳລັບ Export Excel "ລາຍງານຜົນກວດສອບ" (ຕາຕະລາງໃໝ່)
-// ==========================================
-function downloadAuditReport() {
-  if (typeof results === 'undefined' || results.length === 0) {
-    return alert('⚠️ ບໍ່ມີຂໍ້ມູນໃນລະບົບ ກະລຸນາໂຫຼດຂໍ້ມູນກ່ອນ');
-  }
-
-  const searchInput = document.getElementById('search');
-  const filterInput = document.getElementById('filter');
-  const q = searchInput ? normName(searchInput.value) : '';
-  const f = filterInput ? filterInput.value : 'all';
+// ຟັງຊັນຊ່ວຍຄຳນວນຫາ ເງິນເດືອນ (1 ເດືອນ) ແລະ ຈຳນວນເດືອນ ທີ່ແທ້ຈິງ
+function getPersonAuditData(x) {
+  let totalMonths = 0, lastSalary = 0;
   
-  const arr = results.filter(x => {
-    const matchQ = !q || normName(x.name).includes(q);
-    const matchF = (f === 'all' || (f === 'found' && x.status === 'found') || (f === 'empty' && x.status === 'empty'));
-    const isSelected = x.selected !== false;
-    return matchQ && matchF && isSelected;
-  });
-
-  if(!arr.length){ return alert('⚠️ ບໍ່ມີລາຍການໃຫ້ Export (ອາດຖືກກອງອອກ ຫຼື ຍັງບໍ່ໄດ້ໝາຍຕິກເລືອກ)'); }
-
-  // ສ້າງຫົວຂໍ້ 2 ແຖວ ຕາມຮູບແບບ
-  let rows = [
-    ['ລ/ດ', 'ຊື່ ແລະ ນາມສະກຸນ', 'ຈຳນວນ', 'ຂໍ້ຕົກລົງ', '', 'ໄລຍະການອາຍັດເງິນເດືອນ', '', '', '', '', 'ໝາຍເຫດ'],
-    ['', '', '', 'ເລກທີ', 'ລົງວັນທີ', 'ວັນເດືອນປີປະລະໜ້າທີ່ຕາມຂໍ້ຕົກລົງ', 'ຈຳນວນປີການ', 'ລວມຈຳນວນເດືອນຄິດໄລ່ຕາມຂໍ້ຕົກລົງ', 'ເງິນເດືອນສຸດທ້າຍກ່ອນອອກຈາກລັດຖະກອນ', 'ລວມເງິນທີ່ຕ້ອງເກັບຄືນ', '']
-  ];
-
-  let grandTotalMonths = 0;
-  let grandTotalMoney = 0;
-  let index = 1;
-
-  arr.forEach(x => {
-    let totalMonths = 0;
-    let lastSalary = 0;
-    
-    // ຄຳນວນເງິນເດືອນສຸດທ້າຍ ແລະ ຈຳນວນເດືອນທີ່ພົບ
-    if(x.rows && x.rows.length > 0) {
-      x.rows.forEach(r => {
-        let m = r.actual || r.received || r.totalBefore8 || 0;
-        if (m > lastSalary) lastSalary = m; // ຫາເງິນເດືອນສູງສຸດມາເປັນຖານ
-        
-        if (r.calculatedMultiplier !== 'ລວມ') {
-           totalMonths += Number(r.calculatedMultiplier || 0);
-        }
-      });
-    }
-
-    // ກໍລະນີໂຫຼດປະຫວັດແບບ "ທັງໝົດ" ຈະບໍ່ມີ multiplier ລາຍງວດ, ໃຫ້ຄຳນວນຈາກເງິນລວມຫານເງິນເດືອນ
-    if (totalMonths === 0 && x.totalBatchMoney > 0 && lastSalary > 0) {
-       totalMonths = Math.round(x.totalBatchMoney / lastSalary);
-    }
-    
-    // ຄຳນວນປີການຄ່າວໆ (ປີປະລະ - ປີສັງກັດ) ຖ້າບໍ່ພົບຈະປະຫວ່າງໄວ້
-    let yearsOfService = '';
-    if (x.join && x.leave && x.join !== '-' && x.leave !== '-') {
-       const jYear = parseInt(x.join.split('-')[0]);
-       const lYear = parseInt(x.leave.split('-')[0]);
-       if (!isNaN(jYear) && !isNaN(lYear) && lYear >= jYear) {
-           yearsOfService = lYear - jYear;
+  if (x.baseSalary !== undefined && x.baseSalary > 0) {
+      lastSalary = x.baseSalary;
+      totalMonths = x.totalMonths || 0;
+  } 
+  else if(x.rows && x.rows.length > 0) {
+    let targetYear = 0, targetBatch = 0;
+    if (x.freezeDate && x.freezeDate !== '-') {
+       const parts = x.freezeDate.split('-');
+       if (parts.length === 3) {
+          targetYear = parseInt(parts[0], 10);
+          targetBatch = Math.ceil(parseInt(parts[1], 10) / 3);
        }
     }
+    
+    let matchedRow = x.rows.find(r => parseInt(r.year) === targetYear && parseInt(r.batch) === targetBatch);
+    if (matchedRow) {
+        lastSalary = matchedRow.actual || matchedRow.received || matchedRow.totalBefore8 || 0;
+    }
+    
+    x.rows.forEach(r => {
+      let val = r.actual || r.received || r.totalBefore8 || 0;
+      if (!matchedRow && val > lastSalary) lastSalary = val;
+      if (r.calculatedMultiplier && r.calculatedMultiplier !== 'ລວມ') totalMonths += Number(r.calculatedMultiplier);
+    });
+  }
+  
+  if (lastSalary === 0 && x.totalBatchMoney > 0) {
+     totalMonths = x.totalMonths;
+     if (!totalMonths || totalMonths <= 0) {
+         totalMonths = 3;
+     }
+     lastSalary = Math.round(x.totalBatchMoney / totalMonths);
+  }
+  
+  let auditTotalMoney = lastSalary * totalMonths;
+  if (auditTotalMoney === 0) auditTotalMoney = x.totalBatchMoney || 0;
+  
+  return { totalMonths, lastSalary, auditTotalMoney };
+}
 
-    grandTotalMonths += totalMonths;
-    grandTotalMoney += (x.totalBatchMoney || 0);
+// ສ້າງຂໍ້ມູນຮູບແບບ: ຜົນກວດສອບ (ແຍກຕາມເມືອງ + ເພີ່ມຖັນວັນອາຍັດ)
+function renderAuditBody(arr) {
+  const groups = {};
+  let grandTotalMonths = 0, grandTotalMoney = 0, grandTotalPeople = 0;
+
+  arr.forEach(x => {
+    if (x.selected === false) return;
+    const d = x.district || 'ບໍ່ລະບຸເມືອງ';
+    if(!groups[d]) groups[d] = [];
+    groups[d].push(x);
+  });
+
+  let html = '';
+  Object.keys(groups).forEach(d => {
+    let districtMonths = 0, districtMoney = 0;
+    
+    groups[d].forEach(x => {
+      const pData = getPersonAuditData(x);
+      districtMonths += pData.totalMonths;
+      districtMoney += pData.auditTotalMoney; // ໃຊ້ຍອດເງິນທີ່ຄຳນວນໃໝ່ແລ້ວ
+    });
+
+    grandTotalMonths += districtMonths;
+    grandTotalMoney += districtMoney;
+    grandTotalPeople += groups[d].length;
+
+    html += `<tr style="background:#e0f2fe; color:#0369a1; font-size:14px; font-weight:bold;">
+      <td colspan="8" style="padding:10px;">📍 ເມືອງ: ${escapeHtml(d)} (ລວມ ${groups[d].length} ຄົນ)</td>
+      <td style="text-align:center;"><u>${districtMonths}</u></td>
+      <td></td>
+      <td class="money" style="color:#b42318;"><u>${money(districtMoney)}</u></td>
+      <td></td>
+    </tr>`;
+
+    let index = 1;
+    groups[d].forEach(x => {
+      const pData = getPersonAuditData(x);
+      let yearsOfService = '';
+      if (x.join && x.leave && x.join !== '-' && x.leave !== '-') {
+        const jYear = parseInt(x.join.split('-')[0]), lYear = parseInt(x.leave.split('-')[0]);
+        if (!isNaN(jYear) && !isNaN(lYear) && lYear >= jYear) yearsOfService = lYear - jYear;
+      }
+
+      html += `<tr>
+        <td style="text-align:center;">${index++}</td>
+        <td><b>${escapeHtml(x.name)}</b></td>
+        <td style="text-align:center;">1</td>
+        <td style="text-align:center;">${escapeHtml(x.agreement || '-')}</td>
+        <td style="text-align:center;">${fmtDate(x.agreementDate)}</td>
+        <td style="text-align:center;">${fmtDate(x.leave)}</td>
+        <td style="text-align:center; color:#0f766e;">${fmtDate(x.freezeDate)}</td>
+        <td style="text-align:center;">${yearsOfService}</td>
+        <td style="text-align:center; font-weight:bold; color:#0369a1;">${pData.totalMonths}</td>
+        <td class="money">${money(pData.lastSalary)}</td>
+        <td class="money" style="color:#b42318; font-weight:bold;">${money(pData.auditTotalMoney)}</td>
+        <td></td>
+      </tr>`;
+    });
+  });
+
+  html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
+     <td colspan="8" style="padding:12px; text-align:right;">ລວມທັງໝົດ (ລວມ ${grandTotalPeople} ຄົນ):</td>
+     <td style="text-align:center;">${grandTotalMonths}</td>
+     <td></td>
+     <td class="money" style="color:#ccfbf1;">${money(grandTotalMoney)}</td>
+     <td></td>
+  </tr>`;
+  return html;
+}
+
+// 2. ຟັງຊັນສຳລັບ Export Excel "ລາຍງານຜົນກວດສອບ"
+function downloadAuditReport() {
+  if (typeof results === 'undefined' || results.length === 0) return alert('⚠️ ບໍ່ມີຂໍ້ມູນໃນລະບົບ ກະລຸນາໂຫຼດຂໍ້ມູນກ່ອນ');
+  const q = document.getElementById('search') ? normName(document.getElementById('search').value) : '';
+  const f = document.getElementById('filter') ? document.getElementById('filter').value : 'all';
+  const arr = results.filter(x => (!q || normName(x.name).includes(q)) && (f === 'all' || (f === 'found' && x.status === 'found') || (f === 'empty' && x.status === 'empty')) && x.selected !== false);
+  
+  if(!arr.length) return alert('⚠️ ບໍ່ມີລາຍການໃຫ້ Export');
+  
+  let rows = [
+    ['ລ/ດ', 'ຊື່ ແລະ ນາມສະກຸນ', 'ຈຳນວນ', 'ຂໍ້ຕົກລົງ', '', 'ໄລຍະການອາຍັດເງິນເດືອນ', '', '', '', '', '', 'ໝາຍເຫດ'],
+    ['', '', '', 'ເລກທີ', 'ລົງວັນທີ', 'ວັນເດືອນປີປະລະໜ້າທີ່ຕາມຂໍ້ຕົກລົງ', 'ວັນອາຍັດ', 'ຈຳນວນປີການ', 'ຈຳນວນເດືອນທັງໝົດທີ່ໄດ້ອາຍັດເງິນເດືອນ', 'ເງິນເດືອນຂອງເດືອນທີ່ອາຍັດ', 'ລວມເງິນທີ່ຕ້ອງເກັບຄືນ', '']
+  ];
+
+  let grandTotalMonths = 0, grandTotalMoney = 0, index = 1;
+
+  arr.forEach(x => {
+    const pData = getPersonAuditData(x); // ໃຊ້ຟັງຊັນຄຳນວນດຽວກັນກັບຕາຕະລາງແປະ
+    
+    let yearsOfService = '';
+    if (x.join && x.leave && x.join !== '-' && x.leave !== '-') {
+       const jYear = parseInt(x.join.split('-')[0]), lYear = parseInt(x.leave.split('-')[0]);
+       if (!isNaN(jYear) && !isNaN(lYear) && lYear >= jYear) yearsOfService = lYear - jYear;
+    }
+
+    grandTotalMonths += pData.totalMonths;
+    grandTotalMoney += pData.auditTotalMoney;
 
     rows.push([
-      index++,
-      x.name,
-      1, // ຈຳນວນບຸກຄົນ
-      x.agreement || '-',
-      fmtDate(x.agreementDate),
-      fmtDate(x.leave),
-      yearsOfService,
-      totalMonths,
-      lastSalary || x.total || 0,
-      x.totalBatchMoney || 0,
-      ''
+      index++, x.name, 1, x.agreement || '-', fmtDate(x.agreementDate), fmtDate(x.leave),
+      fmtDate(x.freezeDate), yearsOfService, pData.totalMonths, pData.lastSalary, pData.auditTotalMoney, ''
     ]);
   });
 
-  // ແຖວລວມທັງໝົດ
-  rows.push([
-    'ລວມທັງໝົດ', '', arr.length, '', '', '', '', grandTotalMonths, '', grandTotalMoney, ''
-  ]);
+  rows.push(['ລວມທັງໝົດ', '', arr.length, '', '', '', '', '', grandTotalMonths, '', grandTotalMoney, '']);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
-  
-  // ຈັດການ Merge Cell (ລວມຫ້ອງແຖວຫົວຂໍ້)
   ws['!merges'] = [
-    { s: {r:0, c:0}, e: {r:1, c:0} }, // ລ/ດ
-    { s: {r:0, c:1}, e: {r:1, c:1} }, // ຊື່
-    { s: {r:0, c:2}, e: {r:1, c:2} }, // ຈຳນວນ
-    { s: {r:0, c:3}, e: {r:0, c:4} }, // ຂໍ້ຕົກລົງ (ແຖວເທິງ)
-    { s: {r:0, c:5}, e: {r:0, c:9} }, // ໄລຍະການອາຍັດ (ແຖວເທິງ)
-    { s: {r:0, c:10}, e: {r:1, c:10} },// ໝາຍເຫດ
-    { s: {r:rows.length-1, c:0}, e: {r:rows.length-1, c:1} } // ແຖວລວມທັງໝົດ
+    { s: {r:0, c:0}, e: {r:1, c:0} }, { s: {r:0, c:1}, e: {r:1, c:1} }, { s: {r:0, c:2}, e: {r:1, c:2} },
+    { s: {r:0, c:3}, e: {r:0, c:4} }, { s: {r:0, c:5}, e: {r:0, c:10} }, { s: {r:0, c:11}, e: {r:1, c:11} },
+    { s: {r:rows.length-1, c:0}, e: {r:rows.length-1, c:1} }
   ];
-
-  // ກຳນົດຄວາມກວ້າງຂອງ Column (ຖັນ) ໃຫ້ງາມໆອັດຕະໂນມັດ
-  ws['!cols'] = [
-    {wpx: 40},  // ລ/ດ
-    {wpx: 150}, // ຊື່
-    {wpx: 50},  // ຈຳນວນ
-    {wpx: 80},  // ເລກທີ
-    {wpx: 80},  // ລົງວັນທີ
-    {wpx: 120}, // ວັນປະລະ
-    {wpx: 80},  // ປີການ
-    {wpx: 100}, // ລວມເດືອນ
-    {wpx: 120}, // ເງິນເດືອນສຸດທ້າຍ
-    {wpx: 120}, // ລວມເງິນເກັບຄືນ
-    {wpx: 100}  // ໝາຍເຫດ
-  ];
-
+  ws['!cols'] = [{wpx: 40}, {wpx: 150}, {wpx: 50}, {wpx: 80}, {wpx: 80}, {wpx: 120}, {wpx: 90}, {wpx: 80}, {wpx: 100}, {wpx: 120}, {wpx: 120}, {wpx: 100}];
+  
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'ຜົນກວດສອບ');
   XLSX.writeFile(wb, 'ລາຍງານ_ຜົນກວດສອບ.xlsx');
@@ -1008,14 +1056,13 @@ function getHeaderHTML() {
   if (currentReportView === 'actual') {
      return `<tr><th>ລ/ດ</th><th>ຊື່ຕາມໄຟລ໌ 1</th><th>ວັນເກີດ</th><th>ວັນສັງກັດລັດ</th><th>ວັນປະລະ</th><th>ວັນອາຍັດ</th><th>ຂໍ້ຕົກລົງ</th><th>Match</th><th>ງວດ/ເດືອນທີ່ພົບ</th><th>ເງິນທີ່ພົບ</th><th>ລວມເງິນ/ງວດ</th><th>ເລືອກ</th></tr>`;
   } else {
-     // ຮູບແບບຜົນກວດສອບ (ຫົວຂໍ້ 2 ຊັ້ນ ລວມຫ້ອງ)
      return `
      <tr>
        <th rowspan="2" style="vertical-align: middle;">ລ/ດ</th>
        <th rowspan="2" style="vertical-align: middle;">ຊື່ ແລະ ນາມສະກຸນ</th>
        <th rowspan="2" style="vertical-align: middle; text-align: center;">ຈຳນວນ</th>
        <th colspan="2" style="text-align: center;">ຂໍ້ຕົກລົງ</th>
-       <th colspan="4" style="text-align: center;">ໄລຍະການອາຍັດເງິນເດືອນ</th>
+       <th colspan="5" style="text-align: center;">ໄລຍະການອາຍັດເງິນເດືອນ</th>
        <th rowspan="2" style="vertical-align: middle; text-align: right;">ລວມເງິນທີ່ຕ້ອງ<br>ເກັບຄືນ</th>
        <th rowspan="2" style="vertical-align: middle;">ໝາຍເຫດ</th>
      </tr>
@@ -1023,9 +1070,10 @@ function getHeaderHTML() {
        <th style="top: 37px; z-index: 2;">ເລກທີ</th>
        <th style="top: 37px; z-index: 2;">ລົງວັນທີ</th>
        <th style="top: 37px; z-index: 2;">ວັນເດືອນປີປະລະໜ້າທີ່<br>ຕາມຂໍ້ຕົກລົງ</th>
+       <th style="top: 37px; z-index: 2; text-align: center; color:#0f766e;">ວັນອາຍັດ</th>
        <th style="top: 37px; z-index: 2; text-align: center;">ຈຳນວນ<br>ປີການ</th>
-       <th style="top: 37px; z-index: 2; text-align: center;">ລວມຈຳນວນເດືອນ<br>ຄິດໄລ່ຕາມຂໍ້ຕົກລົງ</th>
-       <th style="top: 37px; z-index: 2; text-align: right;">ເງິນເດືອນສຸດທ້າຍ<br>ກ່ອນອອກຈາກລັດຖະກອນ</th>
+       <th style="top: 37px; z-index: 2; text-align: center; color:#b42318;">ຈຳນວນເດືອນທັງໝົດ<br>ທີ່ໄດ້ອາຍັດເງິນເດືອນ</th>
+       <th style="top: 37px; z-index: 2; text-align: right; color:#b42318;">ເງິນເດືອນ<br>ຂອງເດືອນທີ່ອາຍັດ</th>
      </tr>`;
   }
 }
@@ -1072,62 +1120,6 @@ function renderActualBody(arr) {
   return html;
 }
 
-// ສ້າງຂໍ້ມູນຮູບແບບ: ຜົນກວດສອບ (ແບບລາຍຊື່ຍາວ ຕາມຂໍ້ຕົກລົງ)
-function renderAuditBody(arr) {
-  let html = '';
-  let grandTotalMonths = 0, grandTotalMoney = 0;
-  let index = 1;
-  
-  arr.forEach(x => {
-     let totalMonths = 0, lastSalary = 0;
-     if(x.rows && x.rows.length > 0) {
-       x.rows.forEach(r => {
-         let m = r.actual || r.received || r.totalBefore8 || 0;
-         if (m > lastSalary) lastSalary = m;
-         if (r.calculatedMultiplier !== 'ລວມ') totalMonths += Number(r.calculatedMultiplier || 0);
-       });
-     }
-     if (totalMonths === 0 && x.totalBatchMoney > 0 && lastSalary > 0) {
-        totalMonths = Math.round(x.totalBatchMoney / lastSalary);
-     }
-     
-     let yearsOfService = '';
-     if (x.join && x.leave && x.join !== '-' && x.leave !== '-') {
-        const jYear = parseInt(x.join.split('-')[0]), lYear = parseInt(x.leave.split('-')[0]);
-        if (!isNaN(jYear) && !isNaN(lYear) && lYear >= jYear) yearsOfService = lYear - jYear;
-     }
-
-     // ກອງສະເພາະລາຍການທີ່ບໍ່ໄດ້ຕິກອອກ (ສຳລັບຜູ້ໃຊ້ທີ່ປິດ Checkbox ໄວ້ຈາກໜ້າທຳອິດ)
-     if (x.selected === false) return;
-
-     grandTotalMonths += totalMonths;
-     grandTotalMoney += (x.totalBatchMoney || 0);
-
-     html += `<tr>
-        <td>${index++}</td>
-        <td><b>${escapeHtml(x.name)}</b></td>
-        <td style="text-align:center;">1</td>
-        <td>${escapeHtml(x.agreement || '-')}</td>
-        <td>${fmtDate(x.agreementDate)}</td>
-        <td>${fmtDate(x.leave)}</td>
-        <td style="text-align:center;">${yearsOfService}</td>
-        <td style="text-align:center; font-weight:bold; color:#0369a1;">${totalMonths}</td>
-        <td class="money">${money(lastSalary || x.total || 0)}</td>
-        <td class="money" style="color:#b42318; font-weight:bold;">${money(x.totalBatchMoney || 0)}</td>
-        <td></td>
-     </tr>`;
-  });
-
-  html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
-     <td colspan="7" style="padding:12px; text-align:right;">ລວມທັງໝົດ:</td>
-     <td style="text-align:center;">${grandTotalMonths}</td>
-     <td></td>
-     <td class="money" style="color:#ccfbf1;">${money(grandTotalMoney)}</td>
-     <td></td>
-  </tr>`;
-  return html;
-}
-
 function toggleSelect(id,on){const x=results.find(a=>a.id===id);if(x)x.selected=on}
 function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 
@@ -1165,18 +1157,37 @@ async function saveToFirebase() {
   const auditTitle = document.getElementById('auditTitle').value.trim() || `ປະຈຳປີ ${manualYear}`; 
   const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
-  const matchedDetails = arr.map(x => ({
-   id: x.id,
-   name: x.name,
-   birth: x.birth || '-',
-   join: x.join || '-',
-   leave: x.leave || '-',
-   agreement: x.agreement || '-',
-   agreementDate: x.agreementDate || '-',
-   freezeDate: x.freezeDate || '-',
-   district: x.district || '-',
-   totalFrozen: x.totalBatchMoney
- }));
+  const matchedDetails = arr.map(x => {
+   let targetYear = 0, targetBatch = 0;
+   if (x.freezeDate && x.freezeDate !== '-') {
+      const parts = x.freezeDate.split('-');
+      if (parts.length === 3) {
+         targetYear = parseInt(parts[0], 10);
+         targetBatch = Math.ceil(parseInt(parts[1], 10) / 3);
+      }
+   }
+   let baseSal = 0, tMonths = 0;
+   
+   let matchedRow = x.rows.find(r => parseInt(r.year) === targetYear && parseInt(r.batch) === targetBatch);
+   if (matchedRow) {
+       baseSal = matchedRow.actual || matchedRow.received || matchedRow.totalBefore8 || 0; 
+   }
+   
+   x.rows.forEach(r => {
+      let m = r.actual || r.received || r.totalBefore8 || 0;
+      if (!matchedRow && m > baseSal) baseSal = m; 
+      if (r.calculatedMultiplier !== 'ລວມ') tMonths += Number(r.calculatedMultiplier || 0);
+   });
+
+   return {
+     id: x.id, name: x.name, birth: x.birth || '-', join: x.join || '-',
+     leave: x.leave || '-', agreement: x.agreement || '-', agreementDate: x.agreementDate || '-',
+     freezeDate: x.freezeDate || '-', district: x.district || '-',
+     totalFrozen: x.totalBatchMoney,
+     baseSalary: baseSal,     // ບັນທຶກເງິນເດືອນ 1 ເດືອນໂດຍບໍ່ຕ້ອງຫານ 3
+     totalMonths: tMonths     
+   };
+ });
 
   const payload = {
     auditTitle: auditTitle,
@@ -1303,7 +1314,6 @@ function loadSelectedHistory() {
   if(selectedId === 'all') {
     let combinedMap = new Map();
     let grandTotalMoney = 0;
-
     const records = groupedHistories[title];
 
     records.forEach(history => {
@@ -1313,52 +1323,46 @@ function loadSelectedHistory() {
         
         if(!combinedMap.has(key)) {
             combinedMap.set(key, {
-              name: d.name,
-              birth: (d.birth && d.birth !== '-') ? d.birth : '-',
-              join: (d.join && d.join !== '-') ? d.join : '-',
-              leave: (d.leave && d.leave !== '-') ? d.leave : '-',
+              name: d.name, birth: (d.birth && d.birth !== '-') ? d.birth : '-',
+              join: (d.join && d.join !== '-') ? d.join : '-', leave: (d.leave && d.leave !== '-') ? d.leave : '-',
               district: (d.district && d.district !== '-') ? d.district : '-',
-              freezeDate: d.freezeDate,
-              agreement: d.agreement,
-              agreementDate: d.agreementDate,
-              totalBatchMoney: 0,
-              rows: []
+              freezeDate: d.freezeDate, agreement: d.agreement, agreementDate: d.agreementDate,
+              totalBatchMoney: 0, baseSalary: 0, totalMonths: 0, rows: []
           });
-        } else {
-          let existing = combinedMap.get(key);
-          if (existing.birth === '-' && d.birth && d.birth !== '-') existing.birth = d.birth;
-          if (existing.join === '-' && d.join && d.join !== '-') existing.join = d.join;
-          if (existing.leave === '-' && d.leave && d.leave !== '-') existing.leave = d.leave;
         }
         
         let person = combinedMap.get(key);
         person.totalBatchMoney += d.totalFrozen; 
+        
+        let bSal = d.baseSalary || 0;
+        let tMon = d.totalMonths || 0;
+        
+        // ຄຳນວນຫາຈຳນວນເດືອນແທ້ໆ ໂດຍອີງຕາມວັນອາຍັດ (ເຊັ່ນ 1/2/2025 ຈະໄດ້ 2 ເດືອນ)
+        if (bSal === 0 && d.totalFrozen > 0) {
+           tMon = getMultiplier(d.freezeDate, history.batch, history.year, 3);
+           if (tMon <= 0) tMon = 3; 
+           bSal = Math.round(d.totalFrozen / tMon);
+        }
+
+        if (bSal > person.baseSalary) person.baseSalary = bSal;
+        person.totalMonths += tMon;
+
+        // ຍັດຄ່າເຂົ້າໄປໃຫ້ renderActualBody ສະແດງຜົນ (x2 ຈະຖືກສະແດງຜົນບ່ອນນີ້ແຫຼະ)
         person.rows.push({
-          batch: history.batch,
-          year: history.year,
-          months: '',
-          calculatedMultiplier: 'ລວມ' 
+          batch: history.batch, year: history.year, months: '',
+          calculatedMultiplier: tMon,
+          actual: bSal
         });
         grandTotalMoney += d.totalFrozen; 
       });
     });
 
     results = Array.from(combinedMap.values()).map((p, i) => ({
-      id: i + 1,
-      name: p.name,
-      birth: p.birth, 
-      join: p.join, 
-      leave: p.leave,
-      district: p.district,
-      freezeDate: p.freezeDate,
-      agreement: p.agreement,
-      agreementDate: p.agreementDate,
-      match: 100,
-      rows: p.rows,
-      total: p.totalBatchMoney,
-      totalBatchMoney: p.totalBatchMoney,
-      status: 'found',
-      selected: true
+      id: i + 1, name: p.name, birth: p.birth, join: p.join, leave: p.leave,
+      district: p.district, freezeDate: p.freezeDate, agreement: p.agreement, agreementDate: p.agreementDate,
+      match: 100, baseSalary: p.baseSalary, totalMonths: p.totalMonths,
+      rows: p.rows, total: p.totalBatchMoney, totalBatchMoney: p.totalBatchMoney,
+      status: 'found', selected: true
     }));
 
     document.getElementById('kPeople').textContent = '-';
@@ -1370,36 +1374,30 @@ function loadSelectedHistory() {
     return; 
   }
 
+  // ສຳລັບການໂຫຼດປະຫວັດງວດດຽວ
   const data = allHistories.find(x => x.id === selectedId);
   if(!data) return;
 
-  results = data.details.map((d, i) => ({
-    id: i + 1,
-    name: d.name,
-    birth: d.birth || '-', 
-    join: d.join || '-', 
-    leave: d.leave || '-',
-    district: d.district || '-',
-    freezeDate: d.freezeDate,
-    agreement: d.agreement,
-    agreementDate: d.agreementDate,
-    match: 100,
-    rows: [{
-      batch: data.batch,
-      year: data.year,
-      months: '',
-      calculatedMultiplier: 1
-    }],
-    total: d.totalFrozen,
-    totalBatchMoney: d.totalFrozen,
-    status: 'found',
-    selected: true
-  }));
+  results = data.details.map((d, i) => {
+    let bSal = d.baseSalary || 0;
+    let tMon = d.totalMonths || 0;
+    if (bSal === 0 && d.totalFrozen > 0) {
+       tMon = getMultiplier(d.freezeDate, data.batch, data.year, 3);
+       if (tMon <= 0) tMon = 3;
+       bSal = Math.round(d.totalFrozen / tMon);
+    }
+    return {
+        id: i + 1, name: d.name, birth: d.birth || '-', join: d.join || '-', leave: d.leave || '-',
+        district: d.district || '-', freezeDate: d.freezeDate, agreement: d.agreement, agreementDate: d.agreementDate,
+        match: 100, baseSalary: bSal, totalMonths: tMon,
+        rows: [{ batch: data.batch, year: data.year, months: '', calculatedMultiplier: tMon, actual: bSal }],
+        total: d.totalFrozen, totalBatchMoney: d.totalFrozen, status: 'found', selected: true
+    };
+  });
   
   document.getElementById('kPeople').textContent = '-';
   document.getElementById('kMatch').textContent = data.totalPeopleMatched.toLocaleString();
   document.getElementById('kMoney').textContent = data.totalMoneyFrozen.toLocaleString();
-  // ເພີ່ມ ປີ data.year ໃສ່ທ້າຍຂໍ້ຄວາມສະຖານະ
   document.getElementById('status').textContent = `👁️ ກຳລັງເບິ່ງປະຫວັດ: ຊື່ກວດສອບ "${title}" ງວດ ${data.batch} ປີ ${data.year}`;
   
   render();
