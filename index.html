@@ -1195,11 +1195,11 @@ function downloadCSV(){
  let rows=[['ລ/ດ','ເມືອງ','ຊື່','ວັນເກີດ','ວັນສັງກັດລັດ','ວັນປະລະ','ວັນອາຍັດ','ເລກທີ່ຂໍ້ຕົກລົງ','Match %','ງວດ','ປີ','ເດືອນ','ຕົວຄູນ (ເດືອນ)','ເງິນອາຍັດ/ພົບ (ເດືອນ)', 'ລວມເງິນ/ງວດ']];
  arr.forEach(x=>{
    const d = x.district || 'ບໍ່ລະບຸເມືອງ';
-   if(!x.rows.length) rows.push([x.id,d,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),'','','',0,0,0]);
+   if(!x.rows.length) rows.push([x.id,d,x.name,fmtDate(x.birth),fmtDate(x.join),fmtDate(x.leave),fmtDate(x.freezeDate),x.agreement,x.match.toFixed(1),'','','',0,0,0]);
    else x.rows.forEach(r=>{
      const moneyFound = r.actual||r.received||r.totalBefore8||0;
      const mult = r.calculatedMultiplier || 0;
-     rows.push([x.id,d,x.name,x.birth,x.join,x.leave,x.freezeDate,x.agreement,x.match.toFixed(1),r.batch,r.year,r.months,mult,moneyFound, moneyFound * mult]);
+     rows.push([x.id,d,x.name,fmtDate(x.birth),fmtDate(x.join),fmtDate(x.leave),fmtDate(x.freezeDate),x.agreement,x.match.toFixed(1),r.batch,r.year,r.months,mult,moneyFound, moneyFound * mult]);
    });
  });
  const ws=XLSX.utils.aoa_to_sheet(rows), wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'ສັງລວມ');
