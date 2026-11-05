@@ -426,7 +426,10 @@ function downloadActualReport() {
     });
   });
 
-  rows.push(['ລວມທັງໝົດ (ທຸກເມືອງ):', '', '', '', '', '', '', '', '', grandTotal, grandTotalBatch]);
+  // ຄຳນວນໃສ່ໃນໄຟລ໌ Excel
+  let totalExportPeople = arr.length;
+  let totalExportFemale = arr.filter(x => /(^|\s)(ນາງ|ນາງສາວ|ນ\.)/i.test(x.name.trim())).length;
+  rows.push([`ລວມທັງໝົດ ${totalExportPeople} ຄົນ, ຍິງ ${totalExportFemale} ຄົນ (ທຸກເມືອງ):`, '', '', '', '', '', '', '', '', grandTotal, grandTotalBatch]);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
   const wb = XLSX.utils.book_new();
@@ -538,8 +541,11 @@ function renderAuditBody(arr) {
     });
   });
 
+  // ຄຳນວນຈຳນວນຄົນຍິງ (ກວດຈາກຄຳນຳໜ້າ ນາງ, ນາງສາວ, ນ.)
+  let grandTotalFemale = arr.filter(x => x.selected !== false && /(^|\s)(ນາງ|ນາງສາວ|ນ\.)/i.test(x.name.trim())).length;
+
   html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
-     <td colspan="8" style="padding:12px; text-align:right;">ລວມທັງໝົດ (ລວມ ${grandTotalPeople} ຄົນ):</td>
+     <td colspan="8" style="padding:12px; text-align:right;">ລວມທັງໝົດ ${grandTotalPeople} ຄົນ, ຍິງ ${grandTotalFemale} ຄົນ (ທຸກເມືອງ):</td>
      <td style="text-align:center;">${grandTotalMonths}</td>
      <td></td>
      <td class="money" style="color:#ccfbf1;">${money(grandTotalMoney)}</td>
@@ -582,7 +588,10 @@ function downloadAuditReport() {
     ]);
   });
 
-  rows.push(['ລວມທັງໝົດ', '', arr.length, '', '', '', '', '', grandTotalMonths, '', grandTotalMoney, '']);
+  // ຄຳນວນຈຳນວນຄົນຍິງສຳລັບ Export
+  let totalExportFemale = arr.filter(x => /(^|\s)(ນາງ|ນາງສາວ|ນ\.)/i.test(x.name.trim())).length;
+
+  rows.push([`ລວມທັງໝົດ ${arr.length} ຄົນ, ຍິງ ${totalExportFemale} ຄົນ (ທຸກເມືອງ):`, '', arr.length, '', '', '', '', '', grandTotalMonths, '', grandTotalMoney, '']);
 
   const ws = XLSX.utils.aoa_to_sheet(rows);
   ws['!merges'] = [
@@ -805,27 +814,80 @@ async function deleteUser(id, username) {
 // ==========================================
 let firstPeople=[], salaryRows=[], results=[], lastCSV=[];
 
-const prefixRe=/^(ທ້າວ|ທ|ທີ່|ນາງສາວ|ນາງ|ອຈ|ອ ຈ|ດຣ|ສ ຈ|ພັນຕີ|ຮສ|ຜສ|ຮ ອ|ຮອ)[\s]+/i;
-function clean(v){return v==null?'':String(v).replace(/\u00a0/g,' ').replace(/\r?\n/g,' ').replace(/\s+/g,' ').trim();}
-function normName(v){
- let s=clean(v).toLowerCase();
- s=s.replace(/[.,:;'"“”‘’(){}\[\]\/\\-]/g,' '); 
- s=s.replace(prefixRe,''); 
- s=s.replace(/[\u0EC8-\u0ECC]/g, ''); 
- s=s.replace(/\s+/g,' ').trim();
- return s;
+// ອັບເດດລາຍຊື່ຄຳນຳໜ້າໃຫ້ຄອບຄຸມຫຼາຍຂຶ້ນ ແລະ ບໍ່ຈຳເປັນຕ້ອງຍະຫວ່າງກໍລຶບໄດ້ (ແຕ່ລະວັງບໍ່ໃຫ້ຕັດຕົວອັກສອນທຳອິດຂອງຊື່)
+const prefixRe = /^(ທ້າວ|ນາງສາວ|ນາງ|ທ່ານ|ທ\.|ນ\.|ດຣ\.|ດຣ|ອຈ\.|ອຈ|ອ\.ຈ\.|ຮສ\.|ຮສ|ຜສ\.|ຜສ|ພັນຕີ|ພັທ|ພັຕ|ພ\.ທ|ພ\.ຕ|ຮ\.ອ|ຮອ)\s*/i;
+
+function clean(v) {
+  // ເພີ່ມການລຶບ zero-width space (\u200B) ທີ່ມັກຕິດມາຈາກ Excel ພາສາລາວ
+  return v == null ? '' : String(v).replace(/\u200B/g, '')
+                                   .replace(/\u00a0/g, ' ')
+                                   .replace(/\r?\n/g, ' ')
+                                   .replace(/\s+/g, ' ').trim();
 }
-function tokens(s){return normName(s).split(' ').filter(Boolean)}
-function levenshtein(a,b){
- const A=[...a],B=[...b],m=A.length,n=B.length;
- let p=Array(n+1).fill(0).map((_,j)=>j);
- for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(c[j-1]+1,p[j]+1,p[j-1]+(A[i-1]===B[j-1]?0:1));p=c}return p[n];
+
+function normName(v) {
+  let s = clean(v).toLowerCase();
+  s = s.replace(/[.,:;'"“”‘’(){}\[\]\/\\-]/g, ' '); 
+  s = s.replace(prefixRe, ''); 
+  // ລຶບວັນນະຍຸດ (ໄມ້ເອກ, ໄມ້ໂທ...) ເພື່ອລົດຄວາມຜິດພາດຈາກການພິມຜິດ
+  s = s.replace(/[\u0EC8-\u0ECC]/g, ''); 
+  // ປັບສະຫຼະ ຳ ແລະ ໍ+າ ໃຫ້ຄືກັນ ເພື່ອແກ້ບັນຫາພິມສະຫຼະອຳຕ່າງກັນ
+  s = s.replace(/ຳ/g, 'ໍາ'); 
+  s = s.replace(/\s+/g, ' ').trim();
+  return s;
 }
-function nameScore(a,b){
- a=normName(a);b=normName(b);if(!a||!b)return 0;if(a===b)return 1;
- let d=levenshtein(a,b), sim=1-d/Math.max(a.length,b.length);
- let ta=tokens(a),tb=tokens(b), common=ta.filter(x=>tb.includes(x)).length/Math.max(ta.length,tb.length);
- return Math.max(sim,common*.98);
+
+function tokens(s) { return normName(s).split(' ').filter(Boolean); }
+
+function levenshtein(a, b) {
+  const A = [...a], B = [...b], m = A.length, n = B.length;
+  let p = Array(n + 1).fill(0).map((_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    let c = [i];
+    for (let j = 1; j <= n; j++) {
+      c[j] = Math.min(c[j - 1] + 1, p[j] + 1, p[j - 1] + (A[i - 1] === B[j - 1] ? 0 : 1));
+    }
+    p = c;
+  }
+  return p[n];
+}
+
+function nameScore(a, b) {
+  a = normName(a); b = normName(b);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+
+  // 1. ກວດສອບກໍລະນີຊື່ໜຶ່ງເປັນສ່ວນໜຶ່ງຂອງອີກຊື່ໜຶ່ງ (ເຊັ່ນ ພິມແຕ່ຊື່ ແຕ່ອີກໄຟລ໌ມີທັງຊື່ແລະນາມສະກຸນ)
+  if (a.includes(b) || b.includes(a)) {
+    // ຖ້າເປັນຊື່ດຽວກັນ ແຕ່ມີ/ບໍ່ມີນາມສະກຸນ ໃຫ້ຄະແນນສູງ ຖ້າຄວາມຍາວພໍສົມຄວນກັນ (>60%)
+    let lenRatio = Math.min(a.length, b.length) / Math.max(a.length, b.length);
+    if (lenRatio > 0.6) return Math.max(0.85, lenRatio); 
+  }
+
+  // 2. ຄຳນວນໄລຍະຫ່າງແບບ Levenshtein ປົກກະຕິ
+  let d = levenshtein(a, b);
+  let sim = 1 - d / Math.max(a.length, b.length);
+
+  // 3. ວິເຄາະການ Match ແບບແຍກຄຳ (ແກ້ບັນຫາພິມຊື່-ນາມສະກຸນສະຫຼັບກັນ ຫຼື ພິມຜິດເລັກນ້ອຍໃນບາງຄຳ)
+  let ta = tokens(a), tb = tokens(b);
+  if (ta.length === 0 || tb.length === 0) return sim;
+
+  let matchedTokens = 0;
+  ta.forEach(wordA => {
+    let bestTokenSim = 0;
+    tb.forEach(wordB => {
+      let tokenD = levenshtein(wordA, wordB);
+      let tokenSim = 1 - tokenD / Math.max(wordA.length, wordB.length);
+      if (tokenSim > bestTokenSim) bestTokenSim = tokenSim;
+    });
+    // ນັບສະເພາະຄຳທີ່ຄ້າຍກັນຫຼາຍກວ່າ 75% ວ່າເປັນຄຳດຽວກັນ
+    if (bestTokenSim > 0.75) matchedTokens += bestTokenSim; 
+  });
+
+  let tokenSimScore = matchedTokens / Math.max(ta.length, tb.length);
+
+  // ເອົາຄະແນນທີ່ສູງທີ່ສຸດ ລະຫວ່າງການທຽບທັງໝົດປະໂຫຍກ ກັບ ການທຽບແຕ່ລະຄຳ
+  return Math.max(sim, tokenSimScore * 0.98);
 }
 
 function dateKey(v){
@@ -1113,8 +1175,12 @@ function renderActualBody(arr) {
      });
   });
   
+  // ຄຳນວນຈຳນວນຄົນທັງໝົດ ແລະ ຜູ້ຍິງ (ກວດຈາກຄຳນຳໜ້າ ນາງ, ນາງສາວ, ນ.)
+  let totalPeople = arr.length;
+  let totalFemale = arr.filter(x => /(^|\s)(ນາງ|ນາງສາວ|ນ\.)/i.test(x.name.trim())).length;
+
   html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
-     <td colspan="9" style="padding:12px; text-align:right;">ລວມທັງໝົດ (ທຸກເມືອງ):</td>
+     <td colspan="9" style="padding:12px; text-align:right;">ລວມທັງໝົດ ${totalPeople} ຄົນ, ຍິງ ${totalFemale} ຄົນ (ທຸກເມືອງ):</td>
      <td class="money">${money(grandTotal)}</td><td class="money" style="color:#ccfbf1;">${money(grandTotalBatch)}</td><td></td>
   </tr>`;
   return html;
