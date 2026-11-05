@@ -234,7 +234,17 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
         <div style="padding: 18px 18px 10px 18px; background: #fff; z-index: 10;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h2 style="margin: 0;">4. ຜົນການກວດສອບ</h2>
-            <div style="display: flex; gap: 8px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+              
+              <!-- ປຸ່ມລາຍງານ (Dropdown) -->
+              <div id="reportMenuContainer" style="position: relative;">
+                <button class="secondary" style="padding: 8px 16px; font-size: 13px; display: flex; align-items: center; gap: 5px; margin: 0;" onclick="toggleReportMenu()">📊 ລາຍງານ <span>▼</span></button>
+                <div id="reportDropdown" style="display:none; position:absolute; top:100%; right:0; background:#fff; border:1px solid #e3e8ef; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); margin-top:8px; min-width:130px; overflow:hidden; z-index:1000;">
+                  <div style="padding:10px 15px; border-bottom:1px solid #f1f5f9; cursor:pointer; color:#172033; font-size:13px;" onclick="generateReport('actual')" onmouseover="this.style.background='#f8fbfc'" onmouseout="this.style.background='#fff'">📄 ຜົນຕົວຈິງ</div>
+                  <div style="padding:10px 15px; cursor:pointer; color:#172033; font-size:13px;" onclick="generateReport('audit')" onmouseover="this.style.background='#f8fbfc'" onmouseout="this.style.background='#fff'">📋 ຜົນກວດສອບ</div>
+                </div>
+              </div>
+
               <button class="danger" style="padding: 8px 16px; font-size: 13px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດ</button>
             </div>
           </div>
@@ -321,18 +331,236 @@ window.alert = function(message) {
 };
 
 // ==========================================
-// ລະບົບເມນູ Dropdown ສຳລັບ Admin
+// ລະບົບເມນູ Dropdown ສຳລັບ Admin ແລະ ລາຍງານ
 // ==========================================
 function toggleAdminMenu() {
   const dropdown = document.getElementById('adminDropdown');
   dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
 }
 
-// ກົດບ່ອນອື່ນໃນໜ້າຈໍແລ້ວໃຫ້ Dropdown ປິດອັດຕະໂນມັດ
+function toggleReportMenu() {
+  const dropdown = document.getElementById('reportDropdown');
+  dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// ຕົວແປເກັບສະຖານະວ່າກຳລັງເບິ່ງຕາຕະລາງຮູບແບບໃດ (ຄ່າເລີ່ມຕົ້ນແມ່ນ ຜົນຕົວຈິງ)
+let currentReportView = 'actual';
+
+function generateReport(type) {
+  document.getElementById('reportDropdown').style.display = 'none';
+  currentReportView = type;
+  
+  // ປ່ຽນຊື່ປຸ່ມໃຫ້ສະແດງຊັດເຈນວ່າກຳລັງເບິ່ງຮູບແບບໃດ
+  const btn = document.querySelector('#reportMenuContainer button');
+  if(type === 'actual') {
+    btn.innerHTML = '📊 ລາຍງານ: ຜົນຕົວຈິງ <span>▼</span>';
+  } else {
+    btn.innerHTML = '📊 ລາຍງານ: ຜົນກວດສອບ <span>▼</span>';
+  }
+  
+  // ເອີ້ນ render ຄືນໃໝ່ ເພື່ອປ່ຽນໜ້າຕາຕາຕະລາງທັນທີ
+  render(); 
+}
+
+// ==========================================
+// 1. ຟັງຊັນສຳລັບ Export Excel "ລາຍງານຜົນຕົວຈິງ"
+// ==========================================
+function downloadActualReport() {
+  if (typeof results === 'undefined' || results.length === 0) {
+    return alert('⚠️ ບໍ່ມີຂໍ້ມູນໃນລະບົບ ກະລຸນາໂຫຼດຂໍ້ມູນກ່ອນ');
+  }
+
+  // ດຶງຄ່າຈາກກ່ອງຄົ້ນຫາ ແລະ ຕົວກອງສະຖານະໃຫ້ປອດໄພ
+  const searchInput = document.getElementById('search');
+  const filterInput = document.getElementById('filter');
+  const q = searchInput ? normName(searchInput.value) : '';
+  const f = filterInput ? filterInput.value : 'all';
+  
+  const arr = results.filter(x => {
+    const matchQ = !q || normName(x.name).includes(q);
+    const matchF = (f === 'all' || (f === 'found' && x.status === 'found') || (f === 'empty' && x.status === 'empty'));
+    const isSelected = x.selected !== false; // ຖ້າບໍ່ໄດ້ຕິກອອກ ໃຫ້ຖືວ່າເລືອກ (ສະຖານະປົກກະຕິຄື undefined ຫຼື true)
+    return matchQ && matchF && isSelected;
+  });
+
+  if(!arr.length){ return alert('⚠️ ບໍ່ມີລາຍການໃຫ້ Export (ອາດຖືກກອງອອກ ຫຼື ຍັງບໍ່ໄດ້ໝາຍຕິກເລືອກ)'); }
+  
+  const groups = {};
+  let grandTotal = 0;
+  let grandTotalBatch = 0;
+
+  arr.forEach(x => {
+    const d = x.district || 'ບໍ່ລະບຸເມືອງ';
+    if(!groups[d]) groups[d] = [];
+    groups[d].push(x);
+    grandTotal += x.total || 0;
+    grandTotalBatch += x.totalBatchMoney || 0;
+  });
+
+  let rows = [
+    ['ລ/ດ', 'ຊື່ຕາມໄຟລ໌ 1', 'ວັນເກີດ', 'ວັນສັງກັດລັດ', 'ວັນປະລະ', 'ວັນອາຍັດ', 'ຂໍ້ຕົກລົງ', 'Match %', 'ງວດ/ເດືອນທີ່ພົບ', 'ເງິນທີ່ພົບ', 'ລວມເງິນ/ງວດ']
+  ];
+
+  Object.keys(groups).forEach(d => {
+    let sumTotal = 0;
+    let sumTotalBatch = 0;
+    groups[d].forEach(x => {
+        sumTotal += x.total || 0;
+        sumTotalBatch += x.totalBatchMoney || 0;
+    });
+
+    rows.push([`📍 ເມືອງ: ${d} (ລວມ ${groups[d].length} ຄົນ)`, '', '', '', '', '', '', '', '', sumTotal, sumTotalBatch]);
+
+    let index = 1;
+    groups[d].forEach(x => {
+       const periods = x.rows.map(r => `${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} (x${r.calculatedMultiplier})`).join(' \n');
+       rows.push([
+         index++, x.name, fmtDate(x.birth), fmtDate(x.join), fmtDate(x.leave), fmtDate(x.freezeDate),
+         (x.agreement || '-') + (x.agreementDate ? ' (' + fmtDate(x.agreementDate) + ')' : ''),
+         x.match ? x.match.toFixed(1) + '%' : 'ບໍ່ພົບ', periods || 'ຫວ່າງ', x.total || 0, x.totalBatchMoney || 0
+       ]);
+    });
+  });
+
+  rows.push(['ລວມທັງໝົດ (ທຸກເມືອງ):', '', '', '', '', '', '', '', '', grandTotal, grandTotalBatch]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ຜົນຕົວຈິງ');
+  XLSX.writeFile(wb, 'ລາຍງານ_ຜົນຕົວຈິງ.xlsx');
+}
+
+// ==========================================
+// 2. ຟັງຊັນສຳລັບ Export Excel "ລາຍງານຜົນກວດສອບ" (ຕາຕະລາງໃໝ່)
+// ==========================================
+function downloadAuditReport() {
+  if (typeof results === 'undefined' || results.length === 0) {
+    return alert('⚠️ ບໍ່ມີຂໍ້ມູນໃນລະບົບ ກະລຸນາໂຫຼດຂໍ້ມູນກ່ອນ');
+  }
+
+  const searchInput = document.getElementById('search');
+  const filterInput = document.getElementById('filter');
+  const q = searchInput ? normName(searchInput.value) : '';
+  const f = filterInput ? filterInput.value : 'all';
+  
+  const arr = results.filter(x => {
+    const matchQ = !q || normName(x.name).includes(q);
+    const matchF = (f === 'all' || (f === 'found' && x.status === 'found') || (f === 'empty' && x.status === 'empty'));
+    const isSelected = x.selected !== false;
+    return matchQ && matchF && isSelected;
+  });
+
+  if(!arr.length){ return alert('⚠️ ບໍ່ມີລາຍການໃຫ້ Export (ອາດຖືກກອງອອກ ຫຼື ຍັງບໍ່ໄດ້ໝາຍຕິກເລືອກ)'); }
+
+  // ສ້າງຫົວຂໍ້ 2 ແຖວ ຕາມຮູບແບບ
+  let rows = [
+    ['ລ/ດ', 'ຊື່ ແລະ ນາມສະກຸນ', 'ຈຳນວນ', 'ຂໍ້ຕົກລົງ', '', 'ໄລຍະການອາຍັດເງິນເດືອນ', '', '', '', '', 'ໝາຍເຫດ'],
+    ['', '', '', 'ເລກທີ', 'ລົງວັນທີ', 'ວັນເດືອນປີປະລະໜ້າທີ່ຕາມຂໍ້ຕົກລົງ', 'ຈຳນວນປີການ', 'ລວມຈຳນວນເດືອນຄິດໄລ່ຕາມຂໍ້ຕົກລົງ', 'ເງິນເດືອນສຸດທ້າຍກ່ອນອອກຈາກລັດຖະກອນ', 'ລວມເງິນທີ່ຕ້ອງເກັບຄືນ', '']
+  ];
+
+  let grandTotalMonths = 0;
+  let grandTotalMoney = 0;
+  let index = 1;
+
+  arr.forEach(x => {
+    let totalMonths = 0;
+    let lastSalary = 0;
+    
+    // ຄຳນວນເງິນເດືອນສຸດທ້າຍ ແລະ ຈຳນວນເດືອນທີ່ພົບ
+    if(x.rows && x.rows.length > 0) {
+      x.rows.forEach(r => {
+        let m = r.actual || r.received || r.totalBefore8 || 0;
+        if (m > lastSalary) lastSalary = m; // ຫາເງິນເດືອນສູງສຸດມາເປັນຖານ
+        
+        if (r.calculatedMultiplier !== 'ລວມ') {
+           totalMonths += Number(r.calculatedMultiplier || 0);
+        }
+      });
+    }
+
+    // ກໍລະນີໂຫຼດປະຫວັດແບບ "ທັງໝົດ" ຈະບໍ່ມີ multiplier ລາຍງວດ, ໃຫ້ຄຳນວນຈາກເງິນລວມຫານເງິນເດືອນ
+    if (totalMonths === 0 && x.totalBatchMoney > 0 && lastSalary > 0) {
+       totalMonths = Math.round(x.totalBatchMoney / lastSalary);
+    }
+    
+    // ຄຳນວນປີການຄ່າວໆ (ປີປະລະ - ປີສັງກັດ) ຖ້າບໍ່ພົບຈະປະຫວ່າງໄວ້
+    let yearsOfService = '';
+    if (x.join && x.leave && x.join !== '-' && x.leave !== '-') {
+       const jYear = parseInt(x.join.split('-')[0]);
+       const lYear = parseInt(x.leave.split('-')[0]);
+       if (!isNaN(jYear) && !isNaN(lYear) && lYear >= jYear) {
+           yearsOfService = lYear - jYear;
+       }
+    }
+
+    grandTotalMonths += totalMonths;
+    grandTotalMoney += (x.totalBatchMoney || 0);
+
+    rows.push([
+      index++,
+      x.name,
+      1, // ຈຳນວນບຸກຄົນ
+      x.agreement || '-',
+      fmtDate(x.agreementDate),
+      fmtDate(x.leave),
+      yearsOfService,
+      totalMonths,
+      lastSalary || x.total || 0,
+      x.totalBatchMoney || 0,
+      ''
+    ]);
+  });
+
+  // ແຖວລວມທັງໝົດ
+  rows.push([
+    'ລວມທັງໝົດ', '', arr.length, '', '', '', '', grandTotalMonths, '', grandTotalMoney, ''
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  
+  // ຈັດການ Merge Cell (ລວມຫ້ອງແຖວຫົວຂໍ້)
+  ws['!merges'] = [
+    { s: {r:0, c:0}, e: {r:1, c:0} }, // ລ/ດ
+    { s: {r:0, c:1}, e: {r:1, c:1} }, // ຊື່
+    { s: {r:0, c:2}, e: {r:1, c:2} }, // ຈຳນວນ
+    { s: {r:0, c:3}, e: {r:0, c:4} }, // ຂໍ້ຕົກລົງ (ແຖວເທິງ)
+    { s: {r:0, c:5}, e: {r:0, c:9} }, // ໄລຍະການອາຍັດ (ແຖວເທິງ)
+    { s: {r:0, c:10}, e: {r:1, c:10} },// ໝາຍເຫດ
+    { s: {r:rows.length-1, c:0}, e: {r:rows.length-1, c:1} } // ແຖວລວມທັງໝົດ
+  ];
+
+  // ກຳນົດຄວາມກວ້າງຂອງ Column (ຖັນ) ໃຫ້ງາມໆອັດຕະໂນມັດ
+  ws['!cols'] = [
+    {wpx: 40},  // ລ/ດ
+    {wpx: 150}, // ຊື່
+    {wpx: 50},  // ຈຳນວນ
+    {wpx: 80},  // ເລກທີ
+    {wpx: 80},  // ລົງວັນທີ
+    {wpx: 120}, // ວັນປະລະ
+    {wpx: 80},  // ປີການ
+    {wpx: 100}, // ລວມເດືອນ
+    {wpx: 120}, // ເງິນເດືອນສຸດທ້າຍ
+    {wpx: 120}, // ລວມເງິນເກັບຄືນ
+    {wpx: 100}  // ໝາຍເຫດ
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'ຜົນກວດສອບ');
+  XLSX.writeFile(wb, 'ລາຍງານ_ຜົນກວດສອບ.xlsx');
+}
+
+// ກົດບ່ອນອື່ນໃນໜ້າຈໍແລ້ວໃຫ້ Dropdown ປິດອັດຕະໂນມັດ (ຮອງຮັບທັງ Admin ແລະ Report)
 document.addEventListener('click', function(e) {
-  const container = document.getElementById('adminMenuContainer');
-  if (container && !container.contains(e.target)) {
-    document.getElementById('adminDropdown').style.display = 'none';
+  const adminContainer = document.getElementById('adminMenuContainer');
+  if (adminContainer && !adminContainer.contains(e.target)) {
+    const adminDrop = document.getElementById('adminDropdown');
+    if(adminDrop) adminDrop.style.display = 'none';
+  }
+  
+  const reportContainer = document.getElementById('reportMenuContainer');
+  if (reportContainer && !reportContainer.contains(e.target)) {
+    const reportDrop = document.getElementById('reportDropdown');
+    if(reportDrop) reportDrop.style.display = 'none';
   }
 });
 
@@ -749,69 +977,155 @@ function run(){
 
 function money(n){return Number(n||0).toLocaleString('lo-LA')}
 
-function render(){
- const q=normName(document.getElementById('search').value), f=document.getElementById('filter').value;
- let arr=results.filter(x=>(!q||normName(x.name).includes(q)) && (f==='all'||(f==='found'&&x.status==='found')||(f==='empty'&&x.status==='empty')));
- const tb=document.querySelector('#resultTable tbody');
- if(!arr.length){tb.innerHTML='<tr><td colspan="12" style="text-align:center;padding:25px">ບໍ່ພົບຂໍ້ມູນ</td></tr>';return}
- 
- // ຈັດກຸ່ມຂໍ້ມູນຕາມເມືອງ
- const groups = {};
- let grandTotal = 0;
- let grandTotalBatch = 0;
+// ==========================================
+// ຟັງຊັນ Render ຕາຕະລາງ (ຮອງຮັບ 2 ຮູບແບບລາຍງານ)
+// ==========================================
+function render() {
+  const q = normName(document.getElementById('search').value), f = document.getElementById('filter').value;
+  let arr = results.filter(x => (!q || normName(x.name).includes(q)) && (f === 'all' || (f === 'found' && x.status === 'found') || (f === 'empty' && x.status === 'empty')));
+  const table = document.getElementById('resultTable');
+  
+  if(!arr.length){
+     table.innerHTML = `<thead>${getHeaderHTML()}</thead><tbody><tr><td colspan="12" style="text-align:center;padding:25px;color:#98a2b3;">ຍັງບໍ່ມີຜົນ (ຫຼື ບໍ່ພົບຂໍ້ມູນ)</td></tr></tbody>`;
+     return;
+  }
+  
+  let html = `<thead>${getHeaderHTML()}</thead><tbody>`;
+  
+  // ກວດສອບວ່າກຳລັງເລືອກເບິ່ງຮູບແບບໃດ
+  if(currentReportView === 'actual') {
+      html += renderActualBody(arr);
+  } else {
+      html += renderAuditBody(arr);
+  }
+  
+  html += `</tbody>`;
+  table.innerHTML = html;
+}
 
- arr.forEach(x => {
-    const d = x.district || 'ບໍ່ລະບຸເມືອງ';
-    if(!groups[d]) groups[d] = [];
-    groups[d].push(x);
-    
-    // ບວກຍອດລວມທັງໝົດທຸກຄົນ
-    grandTotal += x.total || 0;
-    grandTotalBatch += x.totalBatchMoney || 0;
- });
+// ສ້າງຫົວຂໍ້ຕາຕະລາງຕາມຮູບແບບທີ່ເລືອກ
+function getHeaderHTML() {
+  if (currentReportView === 'actual') {
+     return `<tr><th>ລ/ດ</th><th>ຊື່ຕາມໄຟລ໌ 1</th><th>ວັນເກີດ</th><th>ວັນສັງກັດລັດ</th><th>ວັນປະລະ</th><th>ວັນອາຍັດ</th><th>ຂໍ້ຕົກລົງ</th><th>Match</th><th>ງວດ/ເດືອນທີ່ພົບ</th><th>ເງິນທີ່ພົບ</th><th>ລວມເງິນ/ງວດ</th><th>ເລືອກ</th></tr>`;
+  } else {
+     // ຮູບແບບຜົນກວດສອບ (ຫົວຂໍ້ 2 ຊັ້ນ ລວມຫ້ອງ)
+     return `
+     <tr>
+       <th rowspan="2" style="vertical-align: middle;">ລ/ດ</th>
+       <th rowspan="2" style="vertical-align: middle;">ຊື່ ແລະ ນາມສະກຸນ</th>
+       <th rowspan="2" style="vertical-align: middle; text-align: center;">ຈຳນວນ</th>
+       <th colspan="2" style="text-align: center;">ຂໍ້ຕົກລົງ</th>
+       <th colspan="4" style="text-align: center;">ໄລຍະການອາຍັດເງິນເດືອນ</th>
+       <th rowspan="2" style="vertical-align: middle; text-align: right;">ລວມເງິນທີ່ຕ້ອງ<br>ເກັບຄືນ</th>
+       <th rowspan="2" style="vertical-align: middle;">ໝາຍເຫດ</th>
+     </tr>
+     <tr>
+       <th style="top: 37px; z-index: 2;">ເລກທີ</th>
+       <th style="top: 37px; z-index: 2;">ລົງວັນທີ</th>
+       <th style="top: 37px; z-index: 2;">ວັນເດືອນປີປະລະໜ້າທີ່<br>ຕາມຂໍ້ຕົກລົງ</th>
+       <th style="top: 37px; z-index: 2; text-align: center;">ຈຳນວນ<br>ປີການ</th>
+       <th style="top: 37px; z-index: 2; text-align: center;">ລວມຈຳນວນເດືອນ<br>ຄິດໄລ່ຕາມຂໍ້ຕົກລົງ</th>
+       <th style="top: 37px; z-index: 2; text-align: right;">ເງິນເດືອນສຸດທ້າຍ<br>ກ່ອນອອກຈາກລັດຖະກອນ</th>
+     </tr>`;
+  }
+}
 
- let html = '';
- Object.keys(groups).forEach(d => {
-    
-    // 1. ຄິດໄລ່ຍອດລວມຂອງເມືອງນີ້
-    let sumTotal = 0;
-    let sumTotalBatch = 0;
-    groups[d].forEach(x => {
-        sumTotal += x.total || 0;
-        sumTotalBatch += x.totalBatchMoney || 0;
-    });
+// ສ້າງຂໍ້ມູນຮູບແບບ: ຜົນຕົວຈິງ (ແຍກຕາມເມືອງ)
+function renderActualBody(arr) {
+  const groups = {};
+  let grandTotal = 0, grandTotalBatch = 0;
+  
+  arr.forEach(x => {
+     const d = x.district || 'ບໍ່ລະບຸເມືອງ';
+     if(!groups[d]) groups[d] = [];
+     groups[d].push(x);
+     grandTotal += x.total || 0;
+     grandTotalBatch += x.totalBatchMoney || 0;
+  });
+  
+  let html = '';
+  Object.keys(groups).forEach(d => {
+     let sumTotal = 0, sumTotalBatch = 0;
+     groups[d].forEach(x => { sumTotal += x.total || 0; sumTotalBatch += x.totalBatchMoney || 0; });
 
-    // 2. ແຖວຫົວຂໍ້ຂັ້ນກາງສຳລັບແຕ່ລະເມືອງ
-    html += `<tr style="background:#e0f2fe; color:#0369a1; font-size:14px; font-weight:bold;">
-      <td colspan="9" style="padding:10px;">📍 ເມືອງ: ${escapeHtml(d)} (ລວມ ${groups[d].length} ຄົນ)</td>
-      <td class="money"><u>${money(sumTotal)}</u></td>
-      <td class="money" style="color:#0f766e;"><u>${money(sumTotalBatch)}</u></td>
-      <td></td>
-    </tr>`;
-    
-    // 3. ແຖວຂໍ້ມູນບຸກຄົນໃນເມືອງນັ້ນໆ
-    let index = 1; // ເພີ່ມຕົວນັບໃໝ່ເລີ່ມຈາກ 1 ໃຫ້ແຕ່ລະເມືອງ
-    
-    groups[d].forEach(x => {
-       const periods=x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
-       const selected=`<input type="checkbox" ${x.rows.length?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
-       html += `<tr>
-        <td>${index++}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
-        <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
-        <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
-       </tr>`
-    });
- });
- 
- // ເພີ່ມແຖວລວມທັງໝົດລຸ່ມສຸດ 
- html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
-   <td colspan="9" style="padding:12px; text-align:right;">ລວມທັງໝົດ (ທຸກເມືອງ):</td>
-   <td class="money">${money(grandTotal)}</td>
-   <td class="money" style="color:#ccfbf1;">${money(grandTotalBatch)}</td>
-   <td></td>
- </tr>`;
+     html += `<tr style="background:#e0f2fe; color:#0369a1; font-size:14px; font-weight:bold;">
+       <td colspan="9" style="padding:10px;">📍 ເມືອງ: ${escapeHtml(d)} (ລວມ ${groups[d].length} ຄົນ)</td>
+       <td class="money"><u>${money(sumTotal)}</u></td><td class="money" style="color:#0f766e;"><u>${money(sumTotalBatch)}</u></td><td></td>
+     </tr>`;
+     
+     let index = 1;
+     groups[d].forEach(x => {
+        const periods = x.rows.map(r=>`${r.batch==='?'?'ງວດ?':'ງວດ '+r.batch}${r.year?'/'+r.year:''}${r.months?' ('+r.months+')':''} <b style="color:#b42318">(x${r.calculatedMultiplier})</b>`).join('<br>');
+        const selected = `<input type="checkbox" ${x.selected!==false?'checked':''} onchange="toggleSelect(${x.id},this.checked)">`;
+        html += `<tr>
+         <td>${index++}</td><td><b>${escapeHtml(x.name)}</b></td><td>${fmtDate(x.birth)}</td><td>${fmtDate(x.join)}</td><td>${fmtDate(x.leave)}</td><td>${fmtDate(x.freezeDate)}</td><td>${escapeHtml(x.agreement||'-')}<br><span class="small">${fmtDate(x.agreementDate)}</span></td>
+         <td><span class="badge ${x.match>=95?'ok':x.match>=85?'warn':'no'}">${x.match?x.match.toFixed(1)+'%':'ບໍ່ພົບ'}</span></td>
+         <td>${periods||'<span class="muted">ຫວ່າງ</span>'}</td><td class="money"><b>${money(x.total)}</b></td><td class="money" style="color:#0f766e;"><b>${money(x.totalBatchMoney)}</b></td><td>${selected}</td>
+        </tr>`;
+     });
+  });
+  
+  html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
+     <td colspan="9" style="padding:12px; text-align:right;">ລວມທັງໝົດ (ທຸກເມືອງ):</td>
+     <td class="money">${money(grandTotal)}</td><td class="money" style="color:#ccfbf1;">${money(grandTotalBatch)}</td><td></td>
+  </tr>`;
+  return html;
+}
 
- tb.innerHTML = html;
+// ສ້າງຂໍ້ມູນຮູບແບບ: ຜົນກວດສອບ (ແບບລາຍຊື່ຍາວ ຕາມຂໍ້ຕົກລົງ)
+function renderAuditBody(arr) {
+  let html = '';
+  let grandTotalMonths = 0, grandTotalMoney = 0;
+  let index = 1;
+  
+  arr.forEach(x => {
+     let totalMonths = 0, lastSalary = 0;
+     if(x.rows && x.rows.length > 0) {
+       x.rows.forEach(r => {
+         let m = r.actual || r.received || r.totalBefore8 || 0;
+         if (m > lastSalary) lastSalary = m;
+         if (r.calculatedMultiplier !== 'ລວມ') totalMonths += Number(r.calculatedMultiplier || 0);
+       });
+     }
+     if (totalMonths === 0 && x.totalBatchMoney > 0 && lastSalary > 0) {
+        totalMonths = Math.round(x.totalBatchMoney / lastSalary);
+     }
+     
+     let yearsOfService = '';
+     if (x.join && x.leave && x.join !== '-' && x.leave !== '-') {
+        const jYear = parseInt(x.join.split('-')[0]), lYear = parseInt(x.leave.split('-')[0]);
+        if (!isNaN(jYear) && !isNaN(lYear) && lYear >= jYear) yearsOfService = lYear - jYear;
+     }
+
+     // ກອງສະເພາະລາຍການທີ່ບໍ່ໄດ້ຕິກອອກ (ສຳລັບຜູ້ໃຊ້ທີ່ປິດ Checkbox ໄວ້ຈາກໜ້າທຳອິດ)
+     if (x.selected === false) return;
+
+     grandTotalMonths += totalMonths;
+     grandTotalMoney += (x.totalBatchMoney || 0);
+
+     html += `<tr>
+        <td>${index++}</td>
+        <td><b>${escapeHtml(x.name)}</b></td>
+        <td style="text-align:center;">1</td>
+        <td>${escapeHtml(x.agreement || '-')}</td>
+        <td>${fmtDate(x.agreementDate)}</td>
+        <td>${fmtDate(x.leave)}</td>
+        <td style="text-align:center;">${yearsOfService}</td>
+        <td style="text-align:center; font-weight:bold; color:#0369a1;">${totalMonths}</td>
+        <td class="money">${money(lastSalary || x.total || 0)}</td>
+        <td class="money" style="color:#b42318; font-weight:bold;">${money(x.totalBatchMoney || 0)}</td>
+        <td></td>
+     </tr>`;
+  });
+
+  html += `<tr style="background:#0f766e; color:#fff; font-size:15px; font-weight:bold; position:sticky; bottom:0; z-index:2; box-shadow:0 -2px 5px rgba(0,0,0,0.1);">
+     <td colspan="7" style="padding:12px; text-align:right;">ລວມທັງໝົດ:</td>
+     <td style="text-align:center;">${grandTotalMonths}</td>
+     <td></td>
+     <td class="money" style="color:#ccfbf1;">${money(grandTotalMoney)}</td>
+     <td></td>
+  </tr>`;
+  return html;
 }
 
 function toggleSelect(id,on){const x=results.find(a=>a.id===id);if(x)x.selected=on}
