@@ -235,7 +235,6 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
             <h2 style="margin: 0;">4. ຜົນການກວດສອບ</h2>
             <div style="display: flex; gap: 8px;">
-              <button class="secondary" style="padding: 8px 16px; font-size: 13px;" onclick="fetchHistoryList()">🔄 ໂຫຼດລາຍຊື່</button>
               <button class="danger" style="padding: 8px 16px; font-size: 13px;" onclick="deleteAllHistory()">🗑️ ລຶບປະຫວັດ</button>
             </div>
           </div>
@@ -245,16 +244,15 @@ table{border-collapse:collapse;width:100%;font-size:13px;background:#fff}th,td{b
             <div class="field">
               <label>ຊື່ການກວດສອບອອນໄລນ໌</label>
               <select id="auditTitleSelect" onchange="updateBatchDropdown()">
-                <option value="">-- ກົດປຸ່ມໂຫຼດລາຍຊື່ກ່ອນ --</option>
+                <option value="">-- ກຳລັງໂຫຼດລາຍຊື່... --</option>
               </select>
             </div>
             <div class="field">
               <label>ເລືອກງວດ</label>
-              <select id="historySelect">
+              <select id="historySelect" onchange="loadSelectedHistory()">
                 <option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>
               </select>
             </div>
-            <button class="primary" style="margin-bottom: 2px;" onclick="loadSelectedHistory()">👁️ ເບິ່ງຂໍ້ມູນ</button>
           </div>
         </div>
         
@@ -429,6 +427,9 @@ function setCurrentUser(user) {
     document.getElementById('adminMenuContainer').classList.remove('hidden');
     loadUsers();
   }
+
+  // ໂຫຼດລາຍຊື່ປະຫວັດອັດຕະໂນມັດເມື່ອເຂົ້າສູ່ລະບົບສຳເລັດ
+  fetchHistoryList();
 }
 
 function logout() {
@@ -886,6 +887,9 @@ async function saveToFirebase() {
     // ເມື່ອສຳເລັດ ປ່ຽນຂໍ້ຄວາມເປັນສຳເລັດ
     statusEl.innerHTML = originalStatus + '<br><span style="color:#166534; font-weight:bold; margin-top:5px; display:block;">☁️ ✅ ບັນທຶກອອນໄລນ໌ອັດຕະໂນມັດ ສຳເລັດແລ້ວ!</span>';
     
+    // ໂຫຼດລາຍຊື່ໃໝ່ເຂົ້າ Dropdown ອັດຕະໂນມັດ ຫຼັງຈາກບັນທຶກສຳເລັດ
+    fetchHistoryList();
+    
   } catch (e) {
     console.error("Error adding document: ", e);
     document.getElementById('status').innerHTML += `<br><span style="color:#b42318; margin-top:5px; display:block;">❌ ເກີດຂໍ້ຜິດພາດການບັນທຶກອອນໄລນ໌: ${e.message}</span>`;
@@ -896,17 +900,17 @@ let allHistories = [];
 let groupedHistories = {}; // ສຳລັບເກັບແຍກຕາມຊື່ການກວດສອບ
 
 async function fetchHistoryList() {
-  if(!window.db) return alert("ກຳລັງເຊື່ອມຕໍ່ຖານຂໍ້ມູນ ກະລຸນາລໍຖ້າ...");
+  if(!window.db) return; // ບໍ່ຕ້ອງ alert ເພື່ອບໍ່ໃຫ້ກວນຕອນໂຫຼດໜ້າທຳອິດ
   try {
-    const btn = document.querySelector('button[onclick="fetchHistoryList()"]');
-    btn.innerHTML = '⏳ ກຳລັງໂຫຼດ...';
+    const titleSelect = document.getElementById('auditTitleSelect');
+    titleSelect.innerHTML = '<option value="">⏳ ກຳລັງໂຫຼດລາຍຊື່...</option>';
     
     const q = window.query(window.collection(window.db, "audit_records"), window.orderBy("timestamp", "desc"));
     const snap = await window.getDocs(q);
     
     if(snap.empty) {
-      btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່';
-      return alert("ຍັງບໍ່ມີປະຫວັດຂໍ້ມູນໃນລະບົບອອນໄລນ໌");
+      titleSelect.innerHTML = '<option value="">-- ຍັງບໍ່ມີປະຫວັດ --</option>';
+      return; 
     }
     
     allHistories = []; 
@@ -924,7 +928,6 @@ async function fetchHistoryList() {
       groupedHistories[titleDisplay].push(data);
     });
     
-    const titleSelect = document.getElementById('auditTitleSelect');
     titleSelect.innerHTML = '<option value="">-- ເລືອກຊື່ການກວດສອບ --</option>';
     
     // ໃສ່ລາຍຊື່ການກວດສອບລົງໃນ Dropdown ທີ 1
@@ -937,13 +940,9 @@ async function fetchHistoryList() {
     
     document.getElementById('historySelect').innerHTML = '<option value="">-- ເລືອກຊື່ກວດສອບກ່ອນ --</option>';
     
-    btn.innerHTML = '✅ ໂຫຼດສຳເລັດ';
-    setTimeout(() => btn.innerHTML = '🔄 ໂຫຼດລາຍຊື່', 3000);
-    
   } catch (e) {
     console.error(e);
-    alert("ເກີດຂໍ້ຜິດພາດ: " + e.message);
-    document.querySelector('button[onclick="fetchHistoryList()"]').innerHTML = '🔄 ໂຫຼດລາຍຊື່';
+    document.getElementById('auditTitleSelect').innerHTML = '<option value="">❌ ໂຫຼດບໍ່ສຳເລັດ</option>';
   }
 }
 
