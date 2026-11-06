@@ -446,23 +446,17 @@ function getPersonAuditData(x) {
       totalMonths = x.totalMonths || 0;
   } 
   else if(x.rows && x.rows.length > 0) {
-    let targetYear = 0, targetBatch = 0;
-    if (x.freezeDate && x.freezeDate !== '-') {
-       const parts = x.freezeDate.split('-');
-       if (parts.length === 3) {
-          targetYear = parseInt(parts[0], 10);
-          targetBatch = Math.ceil(parseInt(parts[1], 10) / 3);
-       }
-    }
+    // ລຽງລຳດັບປີແລະງວດຈາກນ້ອຍຫາໃຫຍ່ ເພື່ອດຶງເອົາເງິນເດືອນຂອງງວດທຳອິດທີ່ພົບ (ເດືອນທີ່ອາຍັດ)
+    let sortedRows = [...x.rows].sort((a, b) => {
+        let yearDiff = parseInt(a.year) - parseInt(b.year);
+        if (yearDiff !== 0) return yearDiff;
+        return parseInt(a.batch) - parseInt(b.batch);
+    });
     
-    let matchedRow = x.rows.find(r => parseInt(r.year) === targetYear && parseInt(r.batch) === targetBatch);
-    if (matchedRow) {
-        lastSalary = matchedRow.actual || matchedRow.received || matchedRow.totalBefore8 || 0;
-    }
+    let firstRow = sortedRows[0];
+    lastSalary = firstRow.actual || firstRow.received || firstRow.totalBefore8 || 0;
     
     x.rows.forEach(r => {
-      let val = r.actual || r.received || r.totalBefore8 || 0;
-      if (!matchedRow && val > lastSalary) lastSalary = val;
       if (r.calculatedMultiplier && r.calculatedMultiplier !== 'ລວມ') totalMonths += Number(r.calculatedMultiplier);
     });
   }
@@ -1224,34 +1218,31 @@ async function saveToFirebase() {
   const totalMoney = arr.reduce((a, x) => a + x.totalBatchMoney, 0);
 
   const matchedDetails = arr.map(x => {
-   let targetYear = 0, targetBatch = 0;
-   if (x.freezeDate && x.freezeDate !== '-') {
-      const parts = x.freezeDate.split('-');
-      if (parts.length === 3) {
-         targetYear = parseInt(parts[0], 10);
-         targetBatch = Math.ceil(parseInt(parts[1], 10) / 3);
-      }
-   }
    let baseSal = 0, tMonths = 0;
    
-   let matchedRow = x.rows.find(r => parseInt(r.year) === targetYear && parseInt(r.batch) === targetBatch);
-   if (matchedRow) {
-       baseSal = matchedRow.actual || matchedRow.received || matchedRow.totalBefore8 || 0; 
+   if(x.rows && x.rows.length > 0) {
+       // ລຽງລຳດັບເພື່ອເອົາເງິນເດືອນຂອງເດືອນທຳອິດທີ່ພົບ
+       let sortedRows = [...x.rows].sort((a, b) => {
+           let yearDiff = parseInt(a.year) - parseInt(b.year);
+           if (yearDiff !== 0) return yearDiff;
+           return parseInt(a.batch) - parseInt(b.batch);
+       });
+       
+       let firstRow = sortedRows[0];
+       baseSal = firstRow.actual || firstRow.received || firstRow.totalBefore8 || 0;
+       
+       x.rows.forEach(r => {
+          if (r.calculatedMultiplier !== 'ລວມ') tMonths += Number(r.calculatedMultiplier || 0);
+       });
    }
-   
-   x.rows.forEach(r => {
-      let m = r.actual || r.received || r.totalBefore8 || 0;
-      if (!matchedRow && m > baseSal) baseSal = m; 
-      if (r.calculatedMultiplier !== 'ລວມ') tMonths += Number(r.calculatedMultiplier || 0);
-   });
 
    return {
      id: x.id, name: x.name, birth: x.birth || '-', join: x.join || '-',
      leave: x.leave || '-', agreement: x.agreement || '-', agreementDate: x.agreementDate || '-',
      freezeDate: x.freezeDate || '-', district: x.district || '-',
      totalFrozen: x.totalBatchMoney,
-     baseSalary: baseSal,     // ບັນທຶກເງິນເດືອນ 1 ເດືອນໂດຍບໍ່ຕ້ອງຫານ 3
-     totalMonths: tMonths     
+     baseSalary: baseSal,
+     totalMonths: tMonths
    };
  });
 
@@ -1393,7 +1384,8 @@ function loadSelectedHistory() {
               join: (d.join && d.join !== '-') ? d.join : '-', leave: (d.leave && d.leave !== '-') ? d.leave : '-',
               district: (d.district && d.district !== '-') ? d.district : '-',
               freezeDate: d.freezeDate, agreement: d.agreement, agreementDate: d.agreementDate,
-              totalBatchMoney: 0, baseSalary: 0, totalMonths: 0, rows: []
+              totalBatchMoney: 0, baseSalary: 0, totalMonths: 0, rows: [],
+              earliestYear: 9999, earliestBatch: 99 // ເພີ່ມຕົວແປເກັບປີແລະງວດເກົ່າສຸດ
           });
         }
         
@@ -1403,14 +1395,21 @@ function loadSelectedHistory() {
         let bSal = d.baseSalary || 0;
         let tMon = d.totalMonths || 0;
         
-        // ຄຳນວນຫາຈຳນວນເດືອນແທ້ໆ ໂດຍອີງຕາມວັນອາຍັດ (ເຊັ່ນ 1/2/2025 ຈະໄດ້ 2 ເດືອນ)
         if (bSal === 0 && d.totalFrozen > 0) {
            tMon = getMultiplier(d.freezeDate, history.batch, history.year, 3);
            if (tMon <= 0) tMon = 3; 
            bSal = Math.round(d.totalFrozen / tMon);
         }
 
-        if (bSal > person.baseSalary) person.baseSalary = bSal;
+        // ດຶງເອົາເງິນເດືອນຈາກງວດທີ່ເກົ່າທີ່ສຸດມາສະແດງ (ເດືອນທຳອິດທີ່ອາຍັດ)
+        let hYear = parseInt(history.year);
+        let hBatch = parseInt(history.batch);
+        if (hYear < person.earliestYear || (hYear === person.earliestYear && hBatch < person.earliestBatch)) {
+            person.earliestYear = hYear;
+            person.earliestBatch = hBatch;
+            person.baseSalary = bSal;
+        }
+
         person.totalMonths += tMon;
 
         // ຍັດຄ່າເຂົ້າໄປໃຫ້ renderActualBody ສະແດງຜົນ (x2 ຈະຖືກສະແດງຜົນບ່ອນນີ້ແຫຼະ)
