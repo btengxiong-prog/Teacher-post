@@ -439,39 +439,32 @@ function downloadActualReport() {
 
 // ຟັງຊັນຊ່ວຍຄຳນວນຫາ ເງິນເດືອນ (1 ເດືອນ) ແລະ ຈຳນວນເດືອນ ທີ່ແທ້ຈິງ
 function getPersonAuditData(x) {
-  let totalMonths = 0, lastSalary = 0;
-  
-  if (x.baseSalary !== undefined && x.baseSalary > 0) {
-      lastSalary = x.baseSalary;
-      totalMonths = x.totalMonths || 0;
-  } 
-  else if(x.rows && x.rows.length > 0) {
-    // ລຽງລຳດັບປີແລະງວດຈາກນ້ອຍຫາໃຫຍ່ ເພື່ອດຶງເອົາເງິນເດືອນຂອງງວດທຳອິດທີ່ພົບ (ເດືອນທີ່ອາຍັດ)
-    let sortedRows = [...x.rows].sort((a, b) => {
-        let yearDiff = parseInt(a.year) - parseInt(b.year);
-        if (yearDiff !== 0) return yearDiff;
-        return parseInt(a.batch) - parseInt(b.batch);
-    });
-    
-    let firstRow = sortedRows[0];
-    lastSalary = firstRow.actual || firstRow.received || firstRow.totalBefore8 || 0;
-    
-    x.rows.forEach(r => {
-      if (r.calculatedMultiplier && r.calculatedMultiplier !== 'ລວມ') totalMonths += Number(r.calculatedMultiplier);
-    });
+  let totalMonths = 0;
+
+  // 1. ຫາຈຳນວນເດືອນທັງໝົດທີ່ຖືກອາຍັດກ່ອນ
+  if (x.totalMonths !== undefined && x.totalMonths > 0) {
+      totalMonths = x.totalMonths;
+  } else if (x.rows && x.rows.length > 0) {
+      x.rows.forEach(r => {
+          if (r.calculatedMultiplier && r.calculatedMultiplier !== 'ລວມ') {
+              totalMonths += Number(r.calculatedMultiplier);
+          }
+      });
   }
-  
-  if (lastSalary === 0 && x.totalBatchMoney > 0) {
-     totalMonths = x.totalMonths;
-     if (!totalMonths || totalMonths <= 0) {
-         totalMonths = 3;
-     }
-     lastSalary = Math.round(x.totalBatchMoney / totalMonths);
+
+  if (totalMonths <= 0 && x.totalBatchMoney > 0) {
+      totalMonths = x.totalMonths || 3;
   }
-  
-  let auditTotalMoney = lastSalary * totalMonths;
-  if (auditTotalMoney === 0) auditTotalMoney = x.totalBatchMoney || 0;
-  
+
+  // 2. ກ່ອງສີແດງທີ 2: ເອົາຕົວເລກຈິງຈາກ "ຜົນຕົວຈິງ" (totalBatchMoney) ມາເປັນ "ລວມເງິນທີ່ຕ້ອງເກັບຄືນ"
+  let auditTotalMoney = x.totalBatchMoney || 0;
+
+  // 3. ກ່ອງສີແດງທີ 1: ເອົາຕົວເລກລວມຫານໃຫ້ ຈຳນວນເດືອນທັງໝົດ ມາເປັນ "ເງິນເດືອນຂອງເດືອນທີ່ອາຍັດ"
+  let lastSalary = 0;
+  if (totalMonths > 0) {
+      lastSalary = Math.round(auditTotalMoney / totalMonths);
+  }
+
   return { totalMonths, lastSalary, auditTotalMoney };
 }
 
